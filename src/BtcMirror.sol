@@ -36,9 +36,8 @@ contract BtcMirror {
 
         // check that we have a new longest chain
         // TODO: also check that we have a new heaviest chain
-        // not urgent. we disallow retargets to <50% prev difficulty, which
-        // is ~2x more than the largest-ever downward retarget as of 2022.
-        // so an attacker would need >33% total BTC hashpower to fool
+        // we reject retargets to <25% prev difficulty per protocol.
+        // so an attacker would need >20% total BTC hashpower to fool
         // this contract into accepting an alternate chain.
         require(
             blockHeight + numHeaders > latestBlockHeight,
@@ -57,32 +56,31 @@ contract BtcMirror {
         private
     {
         assert(blockHeader.length == 80);
-
-        uint32 version = uint32(bytes4(blockHeader[0:4]));
-        require(version == 0x04000020, "wrong version");
+        require(blockHeader[0] == 0x04, "wrong version");
 
         bytes32 prevHash = bytes32(
             reverseBytes(uint256(bytes32(blockHeader[4:36])))
         );
         require(prevHash == blockHeightToHash[blockHeight - 1], "bad parent");
 
-        bytes32 blockHash = sha256(abi.encode(sha256(blockHeader)));
+        uint256 blockHashNum = reverseBytes(
+            uint256(sha256(abi.encode(sha256(blockHeader))))
+        );
 
         // verify proof-of-work
         bytes32 bits = bytes32(blockHeader[72:76]);
         uint256 target = getTarget(bits);
-        uint256 blockHashNum = reverseBytes(uint256(blockHash));
         require(blockHashNum < target, "block hash above target");
 
         // support once-every-2016-blocks retargeting
         if (blockHeight % 2016 == 0) {
-            require(target >> 1 < expectedTarget, "<50% difficulty retarget");
+            require(target >> 2 < expectedTarget, "<25% difficulty retarget");
             expectedTarget = target;
         } else {
             require(target == expectedTarget, "wrong difficulty bits");
         }
 
-        blockHeightToHash[blockHeight] = blockHash;
+        blockHeightToHash[blockHeight] = bytes32(blockHashNum);
     }
 
     function getTarget(bytes32 bits) public pure returns (uint256) {

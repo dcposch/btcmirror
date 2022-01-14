@@ -5,9 +5,9 @@ import "ds-test/test.sol";
 import "./console.sol";
 import "./vm.sol";
 
-import "../Contract.sol";
+import "../BtcMirror.sol";
 
-contract ContractTest is DSTest {
+contract BtcMirrorTest is DSTest {
     Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
     BtcMirror mirror = new BtcMirror();
 
