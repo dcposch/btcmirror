@@ -1,0 +1,4 @@
+{
+  "solidity.remappings": ["ds-test=lib/ds-test/src"],
+  "solidity.compileUsingLocalVersion": "/Users/dc/code/crypto/burntbtc/soljson-v0.8.11+commit.d7f03943.js"
+}
