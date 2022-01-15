@@ -9,6 +9,7 @@
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
+    "ethers": "^5.5.3",
     "jsonrpc-ts": "^0.2.1",
     "ts-node": "^10.4.0"
   },

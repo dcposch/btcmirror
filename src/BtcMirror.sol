@@ -56,7 +56,6 @@ contract BtcMirror {
         private
     {
         assert(blockHeader.length == 80);
-        require(blockHeader[0] == 0x04, "wrong version");
 
         bytes32 prevHash = bytes32(
             reverseBytes(uint256(bytes32(blockHeader[4:36])))
