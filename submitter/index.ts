@@ -18,7 +18,7 @@ type BtcRpc = RpcClient<BitcoinJsonRpc>;
 
 async function main() {
   if (btcMirrorContractAddr == null) {
-    throw new Error("usage: ts-node ./submitter <BtcMirror contract address>");
+    throw new Error("usage: npm start -- <BtcMirror contract address>");
   } else if (ethApi == null) {
     throw new Error("ETH_RPC_URL required");
   } else if (ethPK == null) {
@@ -29,7 +29,11 @@ async function main() {
   console.log(`connecting to Ethereum JSON RPC ${ethApi}`);
   const ethProvider = new ethers.providers.JsonRpcProvider(ethApi);
   console.log(`connecting to BtcMirror contract ${btcMirrorContractAddr}`);
-  const { abi } = btcMirrorAbiJson;
+
+  // workaround forge bug https://github.com/gakonst/foundry/issues/457
+  const brokenAbi = btcMirrorAbiJson.abi;
+  const abi = brokenAbi.map((func) => Object.assign(func, { constant: null }));
+
   const contract = new Contract(btcMirrorContractAddr, abi, ethProvider);
   const latestHeightRes = await contract.functions["getLatestBlockHeight"]();
   const mirrorLatestHeight = (latestHeightRes[0] as BigNumber).toNumber();
@@ -43,7 +47,7 @@ async function main() {
     console.log("no new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 5);
+  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 10);
 
   // then, find the most common ancestor
   console.log("finding last common Bitcoin block headers");
@@ -66,8 +70,9 @@ async function main() {
   console.log(`found common hash ${lastCommonHeight}: ${lcHash}`);
 
   // load block headers from last-common to target
+  const submitFromHeight = lastCommonHeight + 1;
   let headersHex = "";
-  for (let height = lastCommonHeight; height < targetHeight; height++) {
+  for (let height = submitFromHeight; height <= targetHeight; height++) {
     const hash = btcHeightToHash[height];
     const hex = await getBlockHeader(rpc, hash);
     console.log(`got BTC block header ${height}: ${hex}`);
@@ -75,12 +80,12 @@ async function main() {
   }
 
   // finally, submit a transaction to update the BTCMirror
-  console.log(`submitting BtcMirror ${lastCommonHeight} ${headersHex}`);
+  console.log(`submitting BtcMirror ${submitFromHeight} ${headersHex}`);
   const ethWallet = new Wallet(ethPK, ethProvider);
   const contractWithSigner = contract.connect(ethWallet);
   const txOptions = { gasLimit: 1000000 };
   const res = await contractWithSigner.functions["submit"](
-    lastCommonHeight,
+    submitFromHeight,
     Buffer.from(headersHex, "hex"),
     txOptions
   );
