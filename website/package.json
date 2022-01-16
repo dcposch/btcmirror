@@ -1,0 +1,21 @@
+{
+  "name": "website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.tsx",
+  "scripts": {
+    "start": "esbuild app.tsx --bundle --servedir=www/ --outdir=www/js",
+    "test": "tslint",
+    "build": "esbuild app.tsx --bundle --minify --outdir=www/js"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@types/react": "^17.0.38",
+    "@types/react-dom": "^17.0.11",
+    "esbuild": "^0.14.11",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "tslint": "^6.1.3"
+  }
+}
