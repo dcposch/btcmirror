@@ -1,30 +1,49 @@
-```
-                                 #
-                                # #
-                               # # #
-                              # # # # 
-                             # # # # #
-              BITCOIN       # # # # # #       MIRROR
-                           # # # # # # # 
-                          # # # # # # # # 
-                         # # # # # # # # # 
-                        # # # # # # # # # #
-                       # # # # # # # # # # #
-                            # # # # # # 
-                        +        #        +
-                         ++++         ++++
-                           ++++++ ++++++
-                             +++++++++
-                               +++++
-                                 +
+# Bitcoin Mirror
 
+```
+                                        #
+                                       # #
+                                      # # #
+                                     # # # # 
+                                    # # # # #
+                                   # # # # # #
+                                  # # # # # # # 
+                                 # # # # # # # # 
+                                # # # # # # # # # 
+                               # # # # # # # # # #
+                              # # # # # # # # # # #
+                                   # # # # # # 
+                               +        #        +
+                                ++++         ++++
+                                  ++++++ ++++++
+                                    +++++++++
+                                      +++++
+                                        +
 ```
 
 
 ## Bitcoin Mirror tracks Bitcoin on Ethereum
 
-Bitcoin Mirror is a smart contract that tracks the longest Bitcoin chain it's seen.
+ This lets you prove that a BTC transaction executed. In other words, it lets you run Simple Payment Verification (SPV) of BTC transactions on Ethereum.
 
-It doesn't rely on oracles. Instead, anyone can submit block headers, and the contract verifies proof-of-work.
+## Quick Start
 
-This lets you prove a Bitcoin transaction on Ethereum. This requires just a merkle proof, and should be gas-efficient.
+### Run the submitter
+
+```
+cd submitter
+npm ci
+npm run submit-xdai
+```
+
+You'll an address with a bit of xdai to pay transaction costs. Set `ETH_SUBMITTER_PRIVATE_KEY` accordingly.
+
+You'll also need a free API key for [getblock.io](https://getblock.io). Set `GETBLOCK_API_KEY`.
+
+### To compile and test the contract
+
+Install [Forge](https://github.com/gakonst/foundry#-foundry-). Then:
+
+```
+make test
+```

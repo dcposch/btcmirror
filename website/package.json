@@ -14,6 +14,7 @@
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "esbuild": "^0.14.11",
+    "ethers": "^5.5.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "tslint": "^6.1.3"
