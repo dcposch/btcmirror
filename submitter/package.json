@@ -6,7 +6,7 @@
   "main": "index.ts",
   "scripts": {
     "start": "ts-node index.ts",
-    "submit-xdai": "while true; do ETH_RPC_URL=https://rpc.xdaichain.com npm start -- 0x8f562b0add56a9facd9e42a51d874ba17f616b27; echo '\n\nSLEEPING FOR 10s...\n\n' && sleep 10; done"
+    "submit-xdai": "while true; do ETH_RPC_URL=https://rpc.xdaichain.com npm start -- 0x8f562b0add56a9facd9e42a51d874ba17f616b27; echo '\n\nSLEEPING FOR 60s...\n\n' && sleep 60; done"
   },
   "author": "",
   "license": "UNLICENSED",

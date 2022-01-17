@@ -82,11 +82,11 @@ BITCOIN                                                                   MIRROR
 function Docs() {
   return (
     <article>
-      <h2>## BtcMirror is a EVM contract that tracks Bitcoin</h2>
+      <h2>## BtcMirror is a Ethereum contract that tracks Bitcoin</h2>
       <p>
         This lets you prove that a BTC transaction executed, on Ethereum. In
         other words, it lets other Ethereum contracts run Simple Payment
-        Verification (SPV) of BTC transactions.
+        Verification (SPV) on BTC transactions.
       </p>
       <p>
         Anyone can submit block headers to BtcMirror. The contract verifies
@@ -96,37 +96,39 @@ function Docs() {
         the BtcMirror contract always reports the current canonical Bitcoin
         chain.
       </p>
+      <p>
+        BtcMirror is currently deployed to the XDAI sidechain. Anyone could
+        deploy it to Arbitrum, or to Ethereum mainnet. BtcMirror is
+        gas-efficient, ~60k gas per block for verification. Bitcoin produces
+        ~144 blocks per day. This is nearly free on xdai.
+      </p>
       <p></p>
       <h2>## Example applications</h2>
       <ol>
         <li>
-          Taking payment for Ethereum-based assets in Bitcoin. For example, you
-          can deploy an ERC721 that will mint an NFT to anyone who can prove
+          <em>Payment for Ethereum-based assets in Bitcoin.</em> For example,
+          you can deploy an ERC721 that will mint an NFT to anyone who can prove
           they've sent x BTC to y address.
         </li>
         <li>
-          Trust-minimized BTC/ETH swaps. XYZ Inc deploys an exchange contract
-          and holds Bitcoin. To trade ETH to BTC, you first send ETH to the
-          smart contract; by default, you can withdraw it again a day later. To
-          keep the ETH, XYZ Inc posts a proof that they've sent you the
+          <em>Trust-minimized BTC/ETH swaps.</em> XYZ Inc deploys an exchange
+          contract and holds Bitcoin. To trade ETH to BTC, you first send ETH to
+          the smart contract; by default, you can withdraw it again a day later.
+          To keep the ETH, XYZ Inc posts a proof that they've sent you the
           corresponding amount of BTC. The opposite direction is even cleaner.
           You send Bitcoin to XYZ Inc's addesss, then submit a proof to the
           exchange contract to claim ETH.
         </li>
         <li>
-          Proof of burn. You burn 1 BTC. You post proof to a contract, which
-          lets you mint 1 BBTC (burnt Bitcoin) on Ethereum.
+          <em>Proof of burn.</em> You burn 1 BTC. You post proof to a contract,
+          which lets you mint 1 BBTC (burnt Bitcoin) on Ethereum.
         </li>
         <li>
-          Bitcoin derivatives. For example, you can report the current Bitcoin
-          hashrate without requiring a trusted oracle.
-        </li>
-        <li>
-          Trust-minimized proof of reserve. Currently, contracts like WBTC use
-          oracles to prove their Bitcoin reserves. You could avoid trusted
-          oracles using a balance-tracking contract. Anyone can submit SPV
-          proofs of transactions to or from a given Bitcoin reserve address. The
-          contract calls BtcMirror to verify the tx proofs and sums all
+          <em>Trust-minimized proof of reserve.</em> Currently, contracts like
+          WBTC use oracles to prove their Bitcoin reserves. You could avoid
+          trusted oracles using a balance-tracking contract. Anyone can submit
+          SPV proofs of transactions to or from a given Bitcoin reserve address.
+          The contract calls BtcMirror to verify the tx proofs and sums all
           transactions it's seen to track the current balance.
         </li>
       </ol>

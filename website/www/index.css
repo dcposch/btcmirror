@@ -42,6 +42,11 @@ article {
     padding: 0 10ch;
 }
 
+em {
+    font-style: normal;
+    background-color: #0b0;
+}
+
 .row {
     display: flex;
     justify-content: space-between;

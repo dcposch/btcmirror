@@ -56,6 +56,7 @@ export default function LiveStatus() {
 
   return (
     <div>
+      <br />
       <div className="row">
         <a href={chain.explorerUrl}>{chain.explorerText}</a>
         <div>
@@ -69,7 +70,9 @@ export default function LiveStatus() {
           })}
         </div>
       </div>
-      <p>Latest Bitcoin blocks. Live data from contract:</p>
+      <p>
+        Latest Bitcoin blocks. <em>Live data from contract:</em>
+      </p>
       {status.chainId === chainId &&
         status.latestBlocks.map((b) => (
           <div key={b.height} className="row">
@@ -79,6 +82,7 @@ export default function LiveStatus() {
         ))}
       {status.chainId !== chainId &&
         [...Array(numBlocksToShow).keys()].map(() => <div>loading...</div>)}
+      <br />
     </div>
   );
 }
