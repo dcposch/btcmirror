@@ -19,7 +19,7 @@ deploy-main: out/deploy-mainnet
 
 out/BtcMirror.sol/BtcMirror.json: src/*.sol
 	forge build --force
-	cp out/BtcMirror.sol/BtcMirror.json website/abi/
+	cp out/BtcMirror.sol/BtcMirror.json abi/
 
 out/deploy-ropsten: out/BtcMirror.sol/BtcMirror.json
 	ETH_RPC_URL=$(ETH_RPC_URL_ROPSTEN) forge create src/BtcMirror.sol:BtcMirror --private-key $(ETH_DEPLOYER_PRIVATE_KEY) | tee out/deploy-ropsten

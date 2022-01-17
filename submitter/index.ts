@@ -2,7 +2,7 @@ import { RpcClient } from "jsonrpc-ts";
 
 import { BigNumber, Contract, ethers, Wallet } from "ethers";
 
-import btcMirrorAbiJson = require("../out/BtcMirror.sol/BtcMirror.json");
+import btcMirrorAbiJson = require("../abi/BtcMirror.json");
 
 const ethApi = process.env.ETH_RPC_URL;
 const ethPK = process.env.ETH_SUBMITTER_PRIVATE_KEY;
