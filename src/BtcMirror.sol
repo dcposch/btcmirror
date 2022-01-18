@@ -80,61 +80,19 @@ contract BtcMirror {
         require(numHeaders > 0, "must submit at least one block");
 
         uint256 newHeight = blockHeight + numHeaders;
-        if (blockHeight / 2016 == latestBlockHeight / 2016) {
-            // new segment STARTS from SAME retarget period.
-            // simply check that we have a new longest chain = heaviest chain
-            require(newHeight > latestBlockHeight, "chain segment too short");
-            for (uint256 i = 0; i < numHeaders; i++) {
-                submitBlock(blockHeight + i, blockHeaders[80 * i:80 * (i + 1)]);
-            }
-        } else {
-            // new segment STARTS from PREV retarget preiod.
-            require(
-                blockHeight / 2016 == latestBlockHeight / 2016 - 1,
-                "cannot import from more than one retarget period ago"
-            );
-            require(
-                newHeight / 2016 == latestBlockHeight / 2016,
-                "chain segment too short, ends in previous retarget period"
-            );
-            uint256 lastRetargetH = (newHeight / 2016) * 2016;
+        // new segment STARTS from SAME retarget period.
+        // simply check that we have a new longest chain = heaviest chain
+        require(newHeight > latestBlockHeight, "chain segment too short");
 
-            // this is the trickiest part of BtcMirror.
-            // we have crossed a retargetting period. we want to gas efficiently
-            // allow a SHORTER but HEAVIER chain to replace a LONG, LIGHTER one.
-            // (otherwise, our 50% honest assumption degrades to 80% honest, as
-            // a colluding 21% can simply withold their hashpower for a whole
-            // 2-week retarget period, then mine a far-future spoof block at the
-            // very end, setting the difficulty to the minimum 25% of previous.
-            // then, as they are over 25% of the honest hashpower, they outrun
-            // the honest chain on length and fool BtcMirror.)
-            //
-            // we avoid this by calculating total difficulty since retarget.
-            uint256 oldNSince = latestBlockHeight - lastRetargetH;
-            uint256 MAX = ~uint256(0);
-            uint256 oldTotalSince = oldNSince * (MAX / expectedTarget);
-
-            for (uint256 i = 0; i < numHeaders; i++) {
-                submitBlock(blockHeight + i, blockHeaders[80 * i:80 * (i + 1)]);
-            }
-
-            uint256 newNSince = newHeight - lastRetargetH;
-            uint256 newTotalSince = newNSince * (MAX / expectedTarget);
-            require(newTotalSince > oldTotalSince, "total difficulty too low");
-            emit NewTotalDifficultySinceRetarget(newHeight, newTotalSince);
-
-            // erase any block hashes above newHeight, now invalidated.
-            for (uint256 i = newHeight + 1; i <= latestBlockHeight; i++) {
-                blockHeightToHash[i] = 0;
-            }
-        }
+        // TODO: REMOVED LOGIC
 
         latestBlockHeight = newHeight;
         uint256 timeIx = blockHeaders.length - 12;
         uint32 time = uint32(bytes4(blockHeaders[timeIx:timeIx + 4]));
-        latestBlockTime = Endian.reverse32(time);
 
-        emit NewTip(newHeight, latestBlockTime, getBlockHash(newHeight));
+        // TODO: REMOVED LOGIC
+
+        emit NewTip(newHeight, time, getBlockHash(newHeight));
     }
 
     function submitBlock(uint256 blockHeight, bytes calldata blockHeader)
