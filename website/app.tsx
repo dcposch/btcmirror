@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import LiveStatus from "./LiveStatus";
 
@@ -11,6 +11,8 @@ function App() {
       <Header />
       <LiveStatus />
       <Docs />
+      <br />
+      <br />
     </main>
   );
 }
@@ -26,37 +28,38 @@ function Header() {
 
 
 
-BITCOIN                                                                   MIRROR
+BITCOIN                                                   MIRROR
   `;
 
   const headerMirror = `
-                                        #
-                                       # #
-                                      # # #
-                                     # # # # 
-                                    # # # # #
-                                   # # # # # #
-                                  # # # # # # # 
-                                 # # # # # # # # 
-                                # # # # # # # # # 
-                               # # # # # # # # # #
-                              # # # # # # # # # # #
-                                   # # # # # # 
-                               +        #        +
-                                ++++         ++++
-                                  ++++++ ++++++
-                                    +++++++++
-                                      +++++
-                                        +
-    `;
+                                #
+                               # #
+                              # # #
+                             # # # # 
+                            # # # # #
+                           # # # # # #
+                          # # # # # # # 
+                         # # # # # # # # 
+                        # # # # # # # # # 
+                       # # # # # # # # # #
+                      # # # # # # # # # # #
+                           # # # # # # 
+                       +        #        +
+                        ++++         ++++
+                          ++++++ ++++++
+                            +++++++++
+                              +++++
+                                +
+`;
 
   // mirror effect
-  const [loc, setLoc] = useState([0, 0]);
-  const onMove = (ev: MouseEvent) => setLoc([ev.clientX, ev.clientY]);
-  useEffect(() => document.addEventListener("mousemove", onMove), []);
+  const [loc, setLoc] = useState(-900);
+  useEffect(() => {
+    const onScroll = () => setLoc(Math.min(-900 + window.scrollY * 6, 0));
+    window.addEventListener("scroll", onScroll);
+  }, []);
 
-  const percent =
-    Math.exp(-(500 * 500) / Math.pow(loc[1] - loc[0] - 500, 2)) * 100;
+  const percent = Math.exp(-(500 * 500) / (loc * loc)) * 100;
   const gradientStops = [
     `#999 ${percent - 10}%`,
     `#bbb ${percent - 5}%`,
@@ -72,16 +75,18 @@ BITCOIN                                                                   MIRROR
   };
 
   return (
-    <header>
-      <pre style={{ position: "absolute", top: 0 }}>{headerText}</pre>
+    <div className="hero">
+      <pre style={{ position: "absolute", top: 0, textSizeAdjust: "none" }}>
+        {headerText}
+      </pre>
       <pre style={mirrorStyle}>{headerMirror}</pre>
-    </header>
+    </div>
   );
 }
 
 function Docs() {
   return (
-    <article>
+    <div className="docs">
       <h2>## BtcMirror is a Ethereum contract that tracks Bitcoin</h2>
       <p>
         This lets you prove that a BTC transaction executed, on Ethereum. In
@@ -102,36 +107,45 @@ function Docs() {
         gas-efficient, ~60k gas per block for verification. Bitcoin produces
         ~144 blocks per day. This is nearly free on xdai.
       </p>
-      <p></p>
       <h2>## Example applications</h2>
-      <ol>
-        <li>
-          <em>Payment for Ethereum-based assets in Bitcoin.</em> For example,
-          you can deploy an ERC721 that will mint an NFT to anyone who can prove
-          they've sent x BTC to y address.
-        </li>
-        <li>
-          <em>Trust-minimized BTC/ETH swaps.</em> XYZ Inc deploys an exchange
-          contract and holds Bitcoin. To trade ETH to BTC, you first send ETH to
-          the smart contract; by default, you can withdraw it again a day later.
-          To keep the ETH, XYZ Inc posts a proof that they've sent you the
-          corresponding amount of BTC. The opposite direction is even cleaner.
-          You send Bitcoin to XYZ Inc's addesss, then submit a proof to the
-          exchange contract to claim ETH.
-        </li>
-        <li>
-          <em>Proof of burn.</em> You burn 1 BTC. You post proof to a contract,
-          which lets you mint 1 BBTC (burnt Bitcoin) on Ethereum.
-        </li>
-        <li>
-          <em>Trust-minimized proof of reserve.</em> Currently, contracts like
-          WBTC use oracles to prove their Bitcoin reserves. You could avoid
-          trusted oracles using a balance-tracking contract. Anyone can submit
-          SPV proofs of transactions to or from a given Bitcoin reserve address.
-          The contract calls BtcMirror to verify the tx proofs and sums all
-          transactions it's seen to track the current balance.
-        </li>
-      </ol>
-    </article>
+      <p>
+        <ol>
+          <li>
+            <em>Payment for Ethereum-based assets in Bitcoin.</em> For example,
+            you can deploy an ERC721 that will mint an NFT to anyone who can
+            prove they've sent x BTC to y address.
+          </li>
+          <li>
+            <em>Trust-minimized BTC/ETH swaps.</em> XYZ Inc deploys an exchange
+            contract and holds Bitcoin. To trade ETH to BTC, you first send ETH
+            to the smart contract; by default, you can withdraw it again a day
+            later. To keep the ETH, XYZ Inc posts a proof that they've sent you
+            the corresponding amount of BTC. The opposite direction is even
+            cleaner. You send Bitcoin to XYZ Inc's addesss, then submit a proof
+            to the exchange contract to claim ETH.
+          </li>
+          <li>
+            <em>Proof of burn.</em> You burn 1 BTC. You post proof to a
+            contract, which lets you mint 1 BBTC (burnt Bitcoin) on Ethereum 😈
+          </li>
+          <li>
+            <em>Trust-minimized proof of reserve.</em> Currently, contracts like
+            WBTC use oracles to prove their Bitcoin reserves. You could avoid
+            trusted oracles using a balance-tracking contract. Anyone can submit
+            SPV proofs of transactions to or from a given Bitcoin reserve
+            address. The contract calls BtcMirror to verify the tx proofs and
+            sums all transactions it's seen to track the current balance.
+          </li>
+        </ol>
+      </p>
+      <br />
+      <div className="row">
+        <div>
+          🛠 built with <a href="https://github.com/gakonst/foundry">forge</a>{" "}
+          and <a href="https://esbuild.github.io/">esbuild</a>
+        </div>
+        <a href="https://github.com/dcposch/btcmirror">view on Github</a>
+      </div>
+    </div>
   );
 }

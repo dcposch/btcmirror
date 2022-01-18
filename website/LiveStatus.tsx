@@ -34,6 +34,7 @@ export default function LiveStatus() {
 
   const [status, setStatus] = useState({
     chainId: "",
+    latestHeight: 0,
     latestBlocks: [] as { height: number; hash: string }[],
   });
 
@@ -50,13 +51,12 @@ export default function LiveStatus() {
         height: latestHeight - i,
         hash: h,
       }));
-      setStatus({ chainId, latestBlocks });
+      setStatus({ chainId, latestBlocks, latestHeight });
     })();
   }, []);
 
   return (
     <div>
-      <br />
       <div className="row">
         <a href={chain.explorerUrl}>{chain.explorerText}</a>
         <div>
@@ -71,18 +71,22 @@ export default function LiveStatus() {
         </div>
       </div>
       <p>
-        Latest Bitcoin blocks. <em>Live data from contract:</em>
+        Live data from contract.{" "}
+        {status.chainId === chainId && (
+          <em>Latest Bitcoin block: #{status.latestHeight}</em>
+        )}
       </p>
-      {status.chainId === chainId &&
-        status.latestBlocks.map((b) => (
-          <div key={b.height} className="row">
-            <div>{b.height}.</div>
-            <div>{b.hash}</div>
-          </div>
-        ))}
-      {status.chainId !== chainId &&
-        [...Array(numBlocksToShow).keys()].map(() => <div>loading...</div>)}
-      <br />
+      <p>
+        <div>Latest block hashes:</div>
+        {status.chainId === chainId &&
+          status.latestBlocks.map((b, i) => {
+            const dispHash = b.hash.replace("0x", "");
+            if (i === 0) return <em key={b.height}>{dispHash}</em>;
+            return <div key={b.height}>{dispHash}</div>;
+          })}
+        {status.chainId !== chainId &&
+          [...Array(numBlocksToShow).keys()].map(() => <div>loading...</div>)}
+      </p>
     </div>
   );
 }

@@ -1,28 +1,40 @@
 /*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */
 
-html,body,p,ol,ul,li,dl,dt,dd,blockquote,figure,fieldset,legend,textarea,pre,iframe,hr,h1,h2,h3,h4,h5,h6{margin:0;padding:0}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}ul{list-style:none}button,input,select{margin:0}html{box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}img,video{height:auto;max-width:100%}iframe{border:0}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}
+html,body,p,ol,ul,li,dl,dt,dd,blockquote,figure,fieldset,legend,textarea,pre,iframe,hr,h1,h2,h3,h4,h5,h6{margin:0;padding:0}
+h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}
+ul{list-style:none}button,input,select{margin:0}
+html{box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+img,video{height:auto;max-width:100%}
+iframe{border:0}
+table{border-collapse:collapse;border-spacing:0}
+td,th{padding:0}
+
+/* Bitcoin Mirror styles */
 
 body {
     font-family: "Consolas", monospace;
     font-size: 16px;
     line-height: 1.5;
     color: #444;
+    text-size-adjust: none;
+    -webkit-text-size-adjust: none;
 }
 
 main {
     box-sizing: border-box;
-    width: 80ch;
-    max-width: 100%;
-    margin: 16px auto;
+    width: 64ch;
+    margin: 0 auto;
 }
 
-header {
-    position: relative;
-    font-weight: bold;
+@media (max-width: 691px) {
+    body {
+        font-size: 10px;
+    }
 }
 
 h2 {
-    margin: 1em 0;
+    margin: 3em 0 1.5em 0;
     font-weight: bold;
 }
 
@@ -31,20 +43,21 @@ ol {
 }
 
 p, li {
-    margin: 1em 0;
+    margin: 1.5em 0;
 }
 
 a {
     color: #444;
 }
 
-article {
-    padding: 0 10ch;
-}
-
 em {
     font-style: normal;
     background-color: #8c8;
+}
+
+.hero {
+    position: relative;
+    font-weight: bold;
 }
 
 .row {
