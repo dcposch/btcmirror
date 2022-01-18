@@ -9,6 +9,8 @@ function App() {
   return (
     <main>
       <Header />
+      <br />
+      <br />
       <LiveStatus />
       <Docs />
       <br />
@@ -103,9 +105,9 @@ function Docs() {
       </p>
       <p>
         BtcMirror is currently deployed to the XDAI sidechain. Anyone could
-        deploy it to Arbitrum, or to Ethereum mainnet. BtcMirror is
-        gas-efficient, ~60k gas per block for verification. Bitcoin produces
-        ~144 blocks per day. This is nearly free on xdai.
+        deploy it to another EVM compatble chain like mainnet or Arbitrum.
+        BtcMirror is gas-efficient, ~60k gas per block for verification. Bitcoin
+        produces ~144 blocks per day. This is nearly free on XDAI.
       </p>
       <h2>## Example applications</h2>
       <p>
