@@ -96,7 +96,7 @@ contract BtcMirror {
     }
 
     function submitBlock(uint256 blockHeight, bytes calldata blockHeader)
-        private
+        public
     {
         assert(blockHeader.length == 80);
 
