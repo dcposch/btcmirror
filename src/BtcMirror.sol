@@ -33,10 +33,15 @@ import "./Endian.sol";
 // script, the BtcMirror contract always reports the current canonical Bitcoin
 // chain.
 contract BtcMirror {
+    // Emitted whenever the contract accepts a new heaviest chain.
     event NewTip(uint256 blockHeight, uint256 blockTime, bytes32 blockHash);
+
+    // Emitted only right after a difficulty retarget, when the contract
+    // accepts a new heaviest chain with updated difficulty.
     event NewTotalDifficultySinceRetarget(
         uint256 blockHeight,
-        uint256 totalDifficulty
+        uint256 totalDifficulty,
+        uint32 newDifficultyBits
     );
 
     uint256 private latestBlockHeight;
@@ -50,12 +55,18 @@ contract BtcMirror {
     uint256 private expectedTarget;
 
     constructor() {
-        // start at block #719000
-        bytes32 blockHash = 0x00000000000000000000e7287fbd9b2252a3a89b4528375b939da35d12708c7f;
-        blockHeightToHash[719000] = blockHash;
-        latestBlockHeight = 719000;
-        latestBlockTime = 1642350642;
-        expectedTarget = 0x0000000000000000000B8C8B0000000000000000000000000000000000000000;
+        // start at block #717694, two  blocks before retarget
+        bytes32 blockHash = 0x0000000000000000000b3dd6d6062aa8b7eb99d033fe29e507e0a0d81b5eaeed;
+        blockHeightToHash[717694] = blockHash;
+        latestBlockHeight = 717694;
+        latestBlockTime = 1641627092;
+        expectedTarget = 0x0000000000000000000B98AB0000000000000000000000000000000000000000;
+
+        // bytes32 blockHash = 0x00000000000000000000e7287fbd9b2252a3a89b4528375b939da35d12708c7f;
+        // blockHeightToHash[719000] = blockHash;
+        // latestBlockHeight = 719000;
+        // latestBlockTime = 1642350642;
+        // expectedTarget = 0x0000000000000000000B8C8B0000000000000000000000000000000000000000;
     }
 
     // Returns the Bitcoin block hash at a specific height.
@@ -79,25 +90,22 @@ contract BtcMirror {
         require(numHeaders * 80 == blockHeaders.length, "wrong header length");
         require(numHeaders > 0, "must submit at least one block");
 
-        uint256 newHeight = blockHeight + numHeaders;
-        if (blockHeight / 2016 == latestBlockHeight / 2016) {
-            // new segment STARTS from SAME retarget period.
+        uint256 newHeight = blockHeight + numHeaders - 1;
+        uint256 startP = blockHeight / 2016;
+        uint256 endP = newHeight / 2016;
+        uint256 lastP = latestBlockHeight / 2016;
+        if (startP == lastP && endP == lastP) {
+            // new segment entirely in SAME retarget period.
             // simply check that we have a new longest chain = heaviest chain
             require(newHeight > latestBlockHeight, "chain segment too short");
             for (uint256 i = 0; i < numHeaders; i++) {
                 submitBlock(blockHeight + i, blockHeaders[80 * i:80 * (i + 1)]);
             }
         } else {
-            // new segment STARTS from PREV retarget preiod.
-            require(
-                blockHeight / 2016 == latestBlockHeight / 2016 - 1,
-                "cannot import from more than one retarget period ago"
-            );
-            require(
-                newHeight / 2016 == latestBlockHeight / 2016,
-                "chain segment too short, ends in previous retarget period"
-            );
-            uint256 lastRetargetH = (newHeight / 2016) * 2016;
+            // new segment STARTS from PREV or CURRENT retarget period.
+            require(startP >= lastP - 1, "ancient retarget period");
+            require(endP >= lastP, "chain segment ends in old retarget period");
+            uint256 lastRetargetH = endP * 2016;
 
             // this is the trickiest part of BtcMirror.
             // we have crossed a retargetting period. we want to gas efficiently
@@ -110,18 +118,25 @@ contract BtcMirror {
             // the honest chain on length and fool BtcMirror.)
             //
             // we avoid this by calculating total difficulty since retarget.
-            uint256 oldNSince = latestBlockHeight - lastRetargetH;
+            uint256 oldTotalSince = 0;
             uint256 MAX = ~uint256(0);
-            uint256 oldTotalSince = oldNSince * (MAX / expectedTarget);
+            if (lastP == endP) {
+                uint256 oldNSince = latestBlockHeight - lastRetargetH + 1;
+                oldTotalSince = oldNSince * (MAX / expectedTarget);
+            }
 
             for (uint256 i = 0; i < numHeaders; i++) {
                 submitBlock(blockHeight + i, blockHeaders[80 * i:80 * (i + 1)]);
             }
 
-            uint256 newNSince = newHeight - lastRetargetH;
-            uint256 newTotalSince = newNSince * (MAX / expectedTarget);
-            require(newTotalSince > oldTotalSince, "total difficulty too low");
-            emit NewTotalDifficultySinceRetarget(newHeight, newTotalSince);
+            uint256 newNSince = newHeight - lastRetargetH + 1;
+            uint256 newTotal = newNSince * (MAX / expectedTarget);
+            require(newTotal > oldTotalSince, "total difficulty too low");
+            uint256 ixB = blockHeaders.length - 8;
+            uint32 newBits = Endian.reverse32(
+                uint32(bytes4(blockHeaders[ixB:ixB + 4]))
+            );
+            emit NewTotalDifficultySinceRetarget(newHeight, newTotal, newBits);
 
             // erase any block hashes above newHeight, now invalidated.
             for (uint256 i = newHeight + 1; i <= latestBlockHeight; i++) {
@@ -130,8 +145,8 @@ contract BtcMirror {
         }
 
         latestBlockHeight = newHeight;
-        uint256 timeIx = blockHeaders.length - 12;
-        uint32 time = uint32(bytes4(blockHeaders[timeIx:timeIx + 4]));
+        uint256 ixT = blockHeaders.length - 12;
+        uint32 time = uint32(bytes4(blockHeaders[ixT:ixT + 4]));
         latestBlockTime = Endian.reverse32(time);
 
         emit NewTip(newHeight, latestBlockTime, getBlockHash(newHeight));
@@ -146,6 +161,7 @@ contract BtcMirror {
             Endian.reverse256(uint256(bytes32(blockHeader[4:36])))
         );
         require(prevHash == blockHeightToHash[blockHeight - 1], "bad parent");
+        require(prevHash != bytes32(0), "parent block not yet submitted");
 
         uint256 blockHashNum = Endian.reverse256(
             uint256(sha256(abi.encode(sha256(blockHeader))))

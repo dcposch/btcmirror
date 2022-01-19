@@ -17,7 +17,7 @@ contract EndianTest is DSTest {
         uint256 input = 0x00112233445566778899aabbccddeeff00000000000000000123456789abcdef;
         assertEq(
             Endian.reverse256(input),
-            0xefcdab89674523010000000000000000ffeeddccbbaa998877665544332211
+            0xefcdab89674523010000000000000000ffeeddccbbaa99887766554433221100
         );
     }
 }
