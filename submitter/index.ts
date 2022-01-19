@@ -54,7 +54,10 @@ async function main() {
   let lastCommonHeight;
   const btcHeightToHash = [];
   for (let height = targetHeight; ; height--) {
-    const mirrorResult = await contract.functions["getBlockHash"](height);
+    const mirrorResult =
+      height > mirrorLatestHeight
+        ? ["n/a"]
+        : await contract.functions["getBlockHash"](height);
     const mirrorHash = (mirrorResult[0] as string).replace("0x", "");
     const btcHash = await getHash(rpc, height);
     btcHeightToHash[height] = btcHash;
@@ -71,12 +74,19 @@ async function main() {
 
   // load block headers from last-common to target
   const submitFromHeight = lastCommonHeight + 1;
-  let headersHex = "";
+  const promises = [];
   for (let height = submitFromHeight; height <= targetHeight; height++) {
     const hash = btcHeightToHash[height];
-    const hex = await getBlockHeader(rpc, hash);
-    console.log(`got BTC block header ${height}: ${hex}`);
-    headersHex += hex;
+    promises.push(getBlockHeader(rpc, hash));
+  }
+  const hashes = await Promise.all(promises);
+  const headersHex = hashes.join("");
+  console.log(`got BTC block headers ${submitFromHeight}: ${headersHex}`);
+
+  const nSubmit = targetHeight - submitFromHeight + 1;
+  if (nSubmit === 0 || headersHex.length !== 160 * nSubmit) {
+    console.log(JSON.stringify({ targetHeight, submitFromHeight, headersHex }));
+    throw new Error("INVALID, exiting");
   }
 
   // finally, submit a transaction to update the BTCMirror

@@ -17,9 +17,9 @@ const chains: Chain[] = [
     id: "xdai",
     name: "XDAI MAINNET",
     rpcUrl: "https://rpc.xdaichain.com",
-    contractAddr: "0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27",
+    contractAddr: "0x24e7091d7e01750f467d4272839acb6b5404dac5",
     explorerUrl:
-      "https://blockscout.com/xdai/mainnet/address/0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27/logs",
+      "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
     explorerText: "View contract on Blockscout",
   },
 ];
