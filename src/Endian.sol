@@ -4,7 +4,7 @@ pragma solidity 0.8.11;
 // Bitwise math helpers, for dealing with Bitcoin block headers.
 // Bitcoin block fields are little-endian. Must flip to big-endian for EVM.
 library Endian {
-    function reverse256(uint256 input) public pure returns (uint256 v) {
+    function reverse256(uint256 input) internal pure returns (uint256 v) {
         v = input;
 
         // swap bytes
@@ -27,7 +27,7 @@ library Endian {
         v = (v >> 128) | (v << 128);
     }
 
-    function reverse32(uint32 input) public pure returns (uint32 v) {
+    function reverse32(uint32 input) internal pure returns (uint32 v) {
         v = input;
 
         // swap bytes
