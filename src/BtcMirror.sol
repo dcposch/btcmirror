@@ -61,12 +61,6 @@ contract BtcMirror {
         latestBlockHeight = 717694;
         latestBlockTime = 1641627092;
         expectedTarget = 0x0000000000000000000B98AB0000000000000000000000000000000000000000;
-
-        // bytes32 blockHash = 0x00000000000000000000e7287fbd9b2252a3a89b4528375b939da35d12708c7f;
-        // blockHeightToHash[719000] = blockHash;
-        // latestBlockHeight = 719000;
-        // latestBlockTime = 1642350642;
-        // expectedTarget = 0x0000000000000000000B8C8B0000000000000000000000000000000000000000;
     }
 
     // Returns the Bitcoin block hash at a specific height.
