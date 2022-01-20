@@ -7,9 +7,13 @@ test:
 
 build: out/BtcMirror.sol/BtcMirror.json
 
+# TEST / STAGING: DEPLOY TO ROPSTEN
+
 deploy: out/deploy-ropsten
 
-deploy-arb: out/deploy-arbitrum
+# PRODUCTION: DEPLOY TO OPTIMISM AND XDAI
+
+deploy-opt: out/deploy-optimism
 
 deploy-xdai: out/deploy-xdai
 

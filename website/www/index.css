@@ -59,6 +59,19 @@ em {
     background-color: #8c8;
 }
 
+button {
+    border: none;
+    text-decoration: underline;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+strong {
+    cursor: default;
+}
+
 .hero {
     position: relative;
     font-weight: bold;

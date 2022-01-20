@@ -47,7 +47,7 @@ async function main() {
     console.log("no new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 10);
+  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 20);
 
   // then, find the most common ancestor
   console.log("finding last common Bitcoin block headers");
@@ -65,8 +65,8 @@ async function main() {
     if (btcHash === mirrorHash) {
       lastCommonHeight = height;
       break;
-    } else if (height === targetHeight - 20) {
-      throw new Error("no common hash in last 20 blocks. catastrophic reorg?");
+    } else if (height === targetHeight - 50) {
+      throw new Error("no common hash in last 50 blocks. catastrophic reorg?");
     }
   }
   const lcHash = btcHeightToHash[lastCommonHeight];

@@ -15,17 +15,27 @@ interface Chain {
 const chains: Chain[] = [
   {
     id: "xdai",
-    name: "XDAI MAINNET",
+    name: "XDAI",
     rpcUrl: "https://rpc.xdaichain.com",
     contractAddr: "0x24e7091d7e01750f467d4272839acb6b5404dac5",
     explorerUrl:
       "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
     explorerText: "View contract on Blockscout",
   },
+  {
+    id: "opt",
+    name: "OPTIMISM",
+    rpcUrl:
+      "https://opt-mainnet.g.alchemy.com/v2/UIWZJo9n_JabdfySOspT_ZwZfExy8UUs",
+    contractAddr: "0x69ee459ca98cbdecf9156b041ee1621513aef0c6",
+    explorerUrl:
+      "https://optimistic.etherscan.io/address/0x69ee459ca98cbdecf9156b041ee1621513aef0c6#events",
+    explorerText: "View contract on Etherscan",
+  },
 ];
 
 export default function LiveStatus() {
-  const [chainId, setChainId] = useState("xdai");
+  const [chainId, setChainId] = useState("opt");
   const chain = chains.find((c) => c.id === chainId);
 
   if (chain.contract == null) {
@@ -40,33 +50,39 @@ export default function LiveStatus() {
 
   const numBlocksToShow = 5;
 
+  // Load latest blocks from contract periodically, and immediately if user
+  // selects a different chain.
   useEffect(() => {
+    if (chainId === status.chainId) return;
     (async () => {
+      const cid = chainId;
       const latestHeight = await chain.contract.getLatestBlockHeight();
       const promises = [...Array(numBlocksToShow).keys()].map((i) =>
         chain.contract.getBlockHash(latestHeight - i)
       );
       const latestHashes = await Promise.all(promises);
+      if (cid !== chainId) return; // stale, ignore
       const latestBlocks = latestHashes.map((h, i) => ({
         height: latestHeight - i,
         hash: h,
       }));
       setStatus({ chainId, latestBlocks, latestHeight });
     })();
-  }, []);
+  }, [chainId]);
 
   return (
     <div>
       <div className="row">
         <a href={chain.explorerUrl}>{chain.explorerText}</a>
         <div>
-          {chains.map((c) => {
-            if (c.id === chainId) return <strong key={c.id}>{c.name}</strong>;
-            return (
-              <a key={c.id} onClick={() => setChainId(c.id)}>
-                {c.name}
-              </a>
-            );
+          {chains.map((c, i) => {
+            const elem =
+              c.id === chainId ? (
+                <strong>{c.name}</strong>
+              ) : (
+                <button onClick={() => setChainId(c.id)}>{c.name}</button>
+              );
+            return <span key={c.id}>{elem} </span>;
           })}
         </div>
       </div>
