@@ -33,11 +33,15 @@ import "./Endian.sol";
 // script, the BtcMirror contract always reports the current canonical Bitcoin
 // chain.
 contract BtcMirror {
-    // Emitted whenever the contract accepts a new heaviest chain.
+    /**
+     * Emitted whenever the contract accepts a new heaviest chain.
+     */
     event NewTip(uint256 blockHeight, uint256 blockTime, bytes32 blockHash);
 
-    // Emitted only right after a difficulty retarget, when the contract
-    // accepts a new heaviest chain with updated difficulty.
+    /**
+     * Emitted only right after a difficulty retarget, when the contract
+     * accepts a new heaviest chain with updated difficulty.
+     */
     event NewTotalDifficultySinceRetarget(
         uint256 blockHeight,
         uint256 totalDifficulty,
@@ -63,22 +67,31 @@ contract BtcMirror {
         expectedTarget = 0x0000000000000000000B98AB0000000000000000000000000000000000000000;
     }
 
-    // Returns the Bitcoin block hash at a specific height.
+    /**
+     * Returns the Bitcoin block hash at a specific height.
+     */
     function getBlockHash(uint256 number) public view returns (bytes32) {
         return blockHeightToHash[number];
     }
 
-    // Returns the height of the last submitted canonical Bitcoin chain.
+    /**
+     * Returns the height of the last submitted canonical Bitcoin chain.
+     */
     function getLatestBlockHeight() public view returns (uint256) {
         return latestBlockHeight;
     }
 
-    // Returns the timestamp of the last submitted canonical Bitcoin chain.
+    /**
+     * Returns the timestamp of the last submitted canonical Bitcoin chain.
+     */
     function getLatestBlockTime() public view returns (uint256) {
         return latestBlockTime;
     }
 
-    // Submits a new Bitcoin chain segment.
+    /**
+     * Submits a new Bitcoin chain segment. Must be heavier (not necessarily
+     * longer) than the chain rooted at getBlockHash(getLatestBlockHeight()).
+     */
     function submit(uint256 blockHeight, bytes calldata blockHeaders) public {
         uint256 numHeaders = blockHeaders.length / 80;
         require(numHeaders * 80 == blockHeaders.length, "wrong header length");
