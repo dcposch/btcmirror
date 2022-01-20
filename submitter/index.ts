@@ -4,6 +4,12 @@ import { BigNumber, Contract, ethers, Wallet } from "ethers";
 
 import btcMirrorAbiJson = require("../abi/BtcMirror.json");
 
+// we do NOT import '@eth-optimism/contracts'. that package has terrible
+// dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
+// all we need is a plain ABI json and a contract address:
+import optGPOAbi = require("../abi/OptimismGasPriceOracle.json");
+const optGPOAddr = "0x420000000000000000000000000000000000000F";
+
 const ethApi = process.env.ETH_RPC_URL;
 const ethPK = process.env.ETH_SUBMITTER_PRIVATE_KEY;
 const apiKey = process.env.GETBLOCK_API_KEY;
@@ -29,6 +35,21 @@ async function main() {
   console.log(`connecting to Ethereum JSON RPC ${ethApi}`);
   const ethProvider = new ethers.providers.JsonRpcProvider(ethApi);
   console.log(`connecting to BtcMirror contract ${btcMirrorContractAddr}`);
+
+  const network = await ethProvider.getNetwork();
+  if (network.chainId === 10) {
+    // optimism. bail if the gas cost is too high
+    const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
+    const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
+    const l1BaseFeeGwei = Math.round(l1BaseFeeRes[0] / 1e9);
+    console.log(`optimism L1 basefee: ${l1BaseFeeGwei} gwei`);
+
+    const maxBaseFee = 100;
+    if (l1BaseFeeGwei > maxBaseFee) {
+      console.log(`quitting, max base fee > ${maxBaseFee}`);
+      return;
+    }
+  }
 
   // workaround forge bug https://github.com/gakonst/foundry/issues/457
   const brokenAbi = btcMirrorAbiJson.abi;
