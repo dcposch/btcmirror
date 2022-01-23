@@ -37,7 +37,8 @@ async function main() {
   console.log(`connecting to BtcMirror contract ${btcMirrorContractAddr}`);
 
   const network = await ethProvider.getNetwork();
-  if (network.chainId === 10) {
+  const isL2 = network.chainId === 10;
+  if (isL2) {
     // optimism. bail if the gas cost is too high
     const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
     const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
@@ -66,6 +67,11 @@ async function main() {
   console.log("got BTC latest block height: " + btcLatestHeight);
   if (btcLatestHeight <= mirrorLatestHeight) {
     console.log("no new blocks");
+    return;
+  }
+  if (isL2 && btcLatestHeight <= mirrorLatestHeight + 5) {
+    // save gas
+    console.log("not enough new blocks");
     return;
   }
   const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 20);
