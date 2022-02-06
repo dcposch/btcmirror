@@ -31,12 +31,6 @@ main {
     margin: 0 auto;
 }
 
-@media (max-width: 691px) {
-    body {
-        font-size: 10px;
-    }
-}
-
 h2 {
     margin: 3em 0 1.5em 0;
     font-weight: bold;

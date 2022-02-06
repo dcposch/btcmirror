@@ -35,7 +35,7 @@ const chains: Chain[] = [
 ];
 
 export default function LiveStatus() {
-  const [chainId, setChainId] = useState("opt");
+  const [chainId, setChainId] = useState("xdai");
   const chain = chains.find((c) => c.id === chainId);
 
   if (chain.contract == null) {
