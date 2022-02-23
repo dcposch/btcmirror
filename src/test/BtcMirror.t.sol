@@ -52,7 +52,7 @@ contract BtcMirrorTest is DSTest {
         bytes.concat(bVer, bTxRoot, bTxRoot, bTime, bBits, bNonce);
 
     bytes headerWrongLength =
-        bytes.concat(bVer, bParent, bTxRoot, bTime, bBits, bNonce, bNonce);
+        bytes.concat(bVer, bParent, bTxRoot, bTime, bBits, bNonce, hex"00");
 
     bytes headerHashTooEasy =
         bytes.concat(bVer, bParent, bTxRoot, bTime, bBits, hex"41b360c0");
