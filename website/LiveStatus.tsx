@@ -14,6 +14,14 @@ interface Chain {
 
 const chains: Chain[] = [
   {
+    id: "zksync2",
+    name: "ZKSYNC",
+    rpcUrl: "https://zksync2-testnet.zksync.dev",
+    contractAddr: "TODO",
+    explorerUrl: "https://zksync2-testnet.zkscan.io/address/0xTODO/contracts",
+    explorerText: "View contract on zkSync2 Alpha Testnet",
+  },
+  {
     id: "xdai",
     name: "XDAI",
     rpcUrl: "https://rpc.xdaichain.com",

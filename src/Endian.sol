@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.11;
+pragma solidity 0.8.12;
 
 // Bitwise math helpers, for dealing with Bitcoin block headers.
 // Bitcoin block fields are little-endian. Must flip to big-endian for EVM.
