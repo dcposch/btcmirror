@@ -37,15 +37,18 @@ async function main() {
   console.log(`connecting to BtcMirror contract ${btcMirrorContractAddr}`);
 
   const network = await ethProvider.getNetwork();
-  const isL2 = network.chainId === 10;
-  if (isL2) {
+  const isL2Opt = network.chainId === 10;
+  const isL2Zksync = ethApi.includes("zksync");
+  const isL2 = isL2Opt || isL2Zksync;
+  console.log(`Network: ${network.chainId} ${network.name} ${ethApi}`);
+  if (isL2Opt) {
     // optimism. bail if the gas cost is too high
     const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
     const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
     const l1BaseFeeGwei = Math.round(l1BaseFeeRes[0] / 1e9);
     console.log(`optimism L1 basefee: ${l1BaseFeeGwei} gwei`);
 
-    const maxBaseFee = 100;
+    const maxBaseFee = 50;
     if (l1BaseFeeGwei > maxBaseFee) {
       console.log(`quitting, max base fee > ${maxBaseFee}`);
       return;
@@ -69,12 +72,12 @@ async function main() {
     console.log("no new blocks");
     return;
   }
-  if (isL2 && btcLatestHeight <= mirrorLatestHeight + 5) {
+  if (isL2 && btcLatestHeight <= mirrorLatestHeight + 10) {
     // save gas
     console.log("not enough new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 20);
+  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 30);
 
   // then, find the most common ancestor
   console.log("finding last common Bitcoin block headers");

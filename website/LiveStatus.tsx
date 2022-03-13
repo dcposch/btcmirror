@@ -17,8 +17,9 @@ const chains: Chain[] = [
     id: "zksync2",
     name: "ZKSYNC",
     rpcUrl: "https://zksync2-testnet.zksync.dev",
-    contractAddr: "TODO",
-    explorerUrl: "https://zksync2-testnet.zkscan.io/address/0xTODO/contracts",
+    contractAddr: "0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27",
+    explorerUrl:
+      "https://zksync2-testnet.zkscan.io/address/0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27/transactions",
     explorerText: "View contract on zkSync2 Alpha Testnet",
   },
   {
@@ -43,7 +44,7 @@ const chains: Chain[] = [
 ];
 
 export default function LiveStatus() {
-  const [chainId, setChainId] = useState("xdai");
+  const [chainId, setChainId] = useState("zksync2");
   const chain = chains.find((c) => c.id === chainId);
 
   if (chain.contract == null) {
