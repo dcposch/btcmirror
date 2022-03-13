@@ -9,6 +9,7 @@ interface Chain {
   contractAddr: string;
   explorerUrl: string;
   explorerText: string;
+  description: string;
   contract?: BtcMirrorContract;
 }
 
@@ -21,6 +22,8 @@ const chains: Chain[] = [
     explorerUrl:
       "https://zksync2-testnet.zkscan.io/address/0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27/transactions",
     explorerText: "View contract on zkSync2 Alpha Testnet",
+    description:
+      "zkSync2 is the first EVM-compatible L2 zkrollup. This allows some beautiful gas-saving optimizations for applications like Bitcoin Mirror. It's currently a testnet.",
   },
   {
     id: "xdai",
@@ -30,6 +33,8 @@ const chains: Chain[] = [
     explorerUrl:
       "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
     explorerText: "View contract on Blockscout",
+    description:
+      "Gnosis Chain (fka xdai) is a fantastic prototyping tool, letting you experience the Ethereum endgame state today: full EVM compatibility, high throughput, ultra low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2 and should not be used for high value assets.",
   },
   {
     id: "opt",
@@ -40,6 +45,8 @@ const chains: Chain[] = [
     explorerUrl:
       "https://optimistic.etherscan.io/address/0x69ee459ca98cbdecf9156b041ee1621513aef0c6#events",
     explorerText: "View contract on Etherscan",
+    description:
+      "Optimism is a pioneering L2 optimistic rollup. Bitcoin Mirror would be prohibitively expensive on L1. It's over 10x cheaper on L2, but still too expensive to run altruistically. I burned 0.5eth in a few weeks tracking Bitcoin on Optimism. Since then, this contract has fallen behind. ZK rollups have fundamental efficiency benefits, allowing rollup blocks to post only a state diff rather than full calldata to L1. Bitcoin Mirror will be live on mainnet again once the first EVM-compatible ZKRU ships.",
   },
 ];
 
@@ -84,7 +91,7 @@ export default function LiveStatus() {
       <div className="row">
         <a href={chain.explorerUrl}>{chain.explorerText}</a>
         <div>
-          {chains.map((c, i) => {
+          {chains.map((c) => {
             const elem =
               c.id === chainId ? (
                 <strong>{c.name}</strong>
@@ -111,6 +118,9 @@ export default function LiveStatus() {
           })}
         {status.chainId !== chainId &&
           [...Array(numBlocksToShow).keys()].map(() => <div>loading...</div>)}
+      </p>
+      <p>
+        <mark>{chain.description}</mark>
       </p>
     </div>
   );

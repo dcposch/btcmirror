@@ -103,12 +103,6 @@ function Docs() {
         the BtcMirror contract always reports the current canonical Bitcoin
         chain.
       </p>
-      <p>
-        BtcMirror is currently deployed to the XDAI sidechain. Anyone could
-        deploy it to another EVM compatble chain like mainnet or Arbitrum.
-        BtcMirror is gas-efficient, ~60k gas per block for verification. Bitcoin
-        produces ~144 blocks per day. This is nearly free on XDAI.
-      </p>
       <h2>## Example applications</h2>
       <p>
         <ol>
@@ -118,13 +112,13 @@ function Docs() {
             prove they've sent x BTC to y address.
           </li>
           <li>
-            <em>Trust-minimized BTC/ETH swaps.</em> XYZ Inc deploys an exchange
+            <em>Trust-minimized BTC/ETH swaps.</em> Bob deploys an exchange
             contract and holds Bitcoin. To trade ETH to BTC, you first send ETH
             to the smart contract; by default, you can withdraw it again a day
-            later. To keep the ETH, XYZ Inc posts a proof that they've sent you
-            the corresponding amount of BTC. The opposite direction is even
-            cleaner. You send Bitcoin to XYZ Inc's addesss, then submit a proof
-            to the exchange contract to claim ETH.
+            later. To keep the ETH, Bob posts a proof that he's sent you the
+            corresponding amount of BTC. The opposite direction is even cleaner.
+            You send Bitcoin to Bob's addesss, then submit a proof to the
+            exchange contract to claim ETH.
           </li>
           <li>
             <em>Proof of burn.</em> You burn 1 BTC. You post proof to a
