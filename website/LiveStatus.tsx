@@ -23,18 +23,7 @@ const chains: Chain[] = [
       "https://zksync2-testnet.zkscan.io/address/0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27/transactions",
     explorerText: "View contract on zkSync2 Alpha Testnet",
     description:
-      "zkSync2 is the first EVM-compatible L2 zkrollup. This allows some beautiful gas-saving optimizations for applications like Bitcoin Mirror. It's currently a testnet.",
-  },
-  {
-    id: "xdai",
-    name: "XDAI",
-    rpcUrl: "https://rpc.xdaichain.com",
-    contractAddr: "0x24e7091d7e01750f467d4272839acb6b5404dac5",
-    explorerUrl:
-      "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
-    explorerText: "View contract on Blockscout",
-    description:
-      "Gnosis Chain (fka xdai) is a fantastic prototyping tool, letting you experience the Ethereum endgame state today: full EVM compatibility, high throughput, ultra low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2 and should not be used for high value assets.",
+      "Bitcoin Mirror would be prohibitively expensive on L1. zkSync2 is the first EVM-compatible L2 zkrollup. This allows some beautiful gas-saving optimizations. It's currently a testnet.",
   },
   {
     id: "opt",
@@ -47,6 +36,17 @@ const chains: Chain[] = [
     explorerText: "View contract on Etherscan",
     description:
       "Optimism is a pioneering L2 optimistic rollup. Bitcoin Mirror would be prohibitively expensive on L1. It's over 10x cheaper on L2, but still too expensive to run altruistically. I burned 0.5eth in a few weeks tracking Bitcoin on Optimism. Since then, this contract has fallen behind. ZK rollups have fundamental efficiency benefits, allowing rollup blocks to post only a state diff rather than full calldata to L1. Bitcoin Mirror will be live on mainnet again once the first EVM-compatible ZKRU ships.",
+  },
+  {
+    id: "xdai",
+    name: "XDAI",
+    rpcUrl: "https://rpc.xdaichain.com",
+    contractAddr: "0x24e7091d7e01750f467d4272839acb6b5404dac5",
+    explorerUrl:
+      "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
+    explorerText: "View contract on Blockscout",
+    description:
+      "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2 and should not be used for high value assets. It's nearly free. I spent <$2 for 10k Bitcoin blocks = 3 months, compared to thousands of dollars on L2 and (hypothetically) millions on L1.",
   },
 ];
 
