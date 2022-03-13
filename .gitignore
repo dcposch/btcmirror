@@ -1,4 +1,11 @@
-cache/
-out/
+# Web
 node_modules/
 website/www/js/
+
+# Forge
+cache/
+out/
+
+# ZKSync2 / Hardhat
+artifacts-zk/
+hh-cache-zk/
