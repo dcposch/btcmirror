@@ -35,7 +35,7 @@ const chains: Chain[] = [
       "https://optimistic.etherscan.io/address/0x69ee459ca98cbdecf9156b041ee1621513aef0c6#events",
     explorerText: "View contract on Etherscan",
     description:
-      "Optimism is a pioneering L2 optimistic rollup. Bitcoin Mirror would be prohibitively expensive on L1. It's over 10x cheaper on L2, but still too expensive to run altruistically. I burned 0.5eth in a few weeks tracking Bitcoin on Optimism. Since then, this contract has fallen behind. ZK rollups have fundamental efficiency benefits, allowing rollup blocks to post only a state diff rather than full calldata to L1. Bitcoin Mirror will be live on mainnet again once the first EVM-compatible ZKRU ships.",
+      "Bitcoin Mirror would be prohibitively expensive on L1. Optimism is a pioneering L2 optimistic rollup. It's over 10x cheaper, but still too expensive. I burned 0.5eth in a few weeks before giving up. After EIP 4844, Optimism will be much cheaper, and this contract will be up to date again.",
   },
   {
     id: "xdai",
@@ -46,7 +46,7 @@ const chains: Chain[] = [
       "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
     explorerText: "View contract on Blockscout",
     description:
-      "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2 and should not be used for high value assets. It's nearly free. I spent <$2 for 10k Bitcoin blocks = 3 months, compared to thousands of dollars on L2 and (hypothetically) millions on L1.",
+      "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2 and should not be used for high value assets. It's nearly free. I spent <$2 for 10k Bitcoin blocks = 3 months.",
   },
 ];
 
