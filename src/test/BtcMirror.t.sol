@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.12;
+pragma solidity >=0.8.0;
 
 import "ds-test/test.sol";
 import "./console.sol";
@@ -56,12 +56,6 @@ contract BtcMirrorTest is DSTest {
 
     bytes headerHashTooEasy =
         bytes.concat(bVer, bParent, bTxRoot, bTime, bBits, hex"41b360c0");
-
-    function testHash() public {
-        BtcMirror mirror = new BtcMirror();
-        bytes32 expectedHash = 0x9acaa5d26d392ace656c2428c991b0a3d3d773845a1300000000000000000000;
-        assertEq(mirror.hashBlock(headerGood), expectedHash);
-    }
 
     function testGetTarget() public {
         BtcMirror mirror = new BtcMirror();

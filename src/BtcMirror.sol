@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.12;
+pragma solidity >=0.8.0;
 
 import "./Endian.sol";
 
@@ -200,16 +200,5 @@ contract BtcMirror {
         mantissa = (mantissa << 8) | uint8(bits[0]);
         uint256 target = mantissa << (8 * (exp - 3));
         return target;
-    }
-
-    function hashBlock(bytes calldata blockHeader)
-        public
-        pure
-        returns (bytes32)
-    {
-        require(blockHeader.length == 80);
-        require(abi.encodePacked(sha256(blockHeader)).length == 32);
-        bytes32 blockHash = sha256(abi.encodePacked(sha256(blockHeader)));
-        return blockHash;
     }
 }

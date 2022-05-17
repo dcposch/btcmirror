@@ -8,19 +8,17 @@ import btcMirrorAbiJson = require("../abi/BtcMirror.json");
 // dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
 // all we need is a plain ABI json and a contract address:
 import optGPOAbi = require("../abi/OptimismGasPriceOracle.json");
+import {
+  createGetblockClient,
+  getBlockCount,
+  getBlockHash,
+  getBlockHeader,
+} from "./bitcoin-rpc-client";
 const optGPOAddr = "0x420000000000000000000000000000000000000F";
 
 const ethApi = process.env.ETH_RPC_URL;
 const ethPK = process.env.ETH_SUBMITTER_PRIVATE_KEY;
-const apiKey = process.env.GETBLOCK_API_KEY;
 const btcMirrorContractAddr = process.argv[2];
-
-interface BitcoinJsonRpc {
-  getblockcount: [];
-  getblockhash: [number];
-  getblockheader: [string, boolean];
-}
-type BtcRpc = RpcClient<BitcoinJsonRpc>;
 
 async function main() {
   if (btcMirrorContractAddr == null) {
@@ -65,8 +63,8 @@ async function main() {
   console.log("got BtcMirror latest block height: " + mirrorLatestHeight);
 
   // then, get Bitcoin latest block height
-  const rpc = createBitcoinRpc();
-  const btcLatestHeight = await getLatestBlockHeight(rpc);
+  const rpc = createGetblockClient();
+  const btcLatestHeight = await getBlockCount(rpc);
   console.log("got BTC latest block height: " + btcLatestHeight);
   if (btcLatestHeight <= mirrorLatestHeight) {
     console.log("no new blocks");
@@ -89,7 +87,7 @@ async function main() {
         ? ["n/a"]
         : await contract.functions["getBlockHash"](height);
     const mirrorHash = (mirrorResult[0] as string).replace("0x", "");
-    const btcHash = await getHash(rpc, height);
+    const btcHash = await getBlockHash(rpc, height);
     btcHeightToHash[height] = btcHash;
     console.log(`height ${height} btc ${btcHash} btcmirror ${mirrorHash}`);
     if (btcHash === mirrorHash) {
@@ -130,49 +128,6 @@ async function main() {
     txOptions
   );
   console.log("result", res);
-}
-
-function createBitcoinRpc() {
-  if (apiKey == "") {
-    throw new Error("need GETBLOCK_API_KEY");
-  }
-
-  return new RpcClient<BitcoinJsonRpc>({
-    url: "https://btc.getblock.io/mainnet/",
-    headers: { "x-api-key": apiKey },
-  });
-}
-
-async function getHash(rpc: BtcRpc, height: number): Promise<string> {
-  let res = await rpc.makeRequest({
-    method: "getblockhash",
-    params: [height],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblockhash: " + res);
-  const blockHash = res.data.result as string;
-  return blockHash;
-}
-
-async function getLatestBlockHeight(rpc: BtcRpc) {
-  const res = await rpc.makeRequest({
-    method: "getblockcount",
-    params: [],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblockcount: " + res);
-  return res.data.result as number;
-}
-
-async function getBlockHeader(rpc: BtcRpc, blockHash: string) {
-  const res = await rpc.makeRequest({
-    method: "getblockheader",
-    params: [blockHash, false],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblockheader: " + res);
-  const headerHex = res.data.result as string;
-  return headerHex;
 }
 
 main().then(() => console.log("done"));
