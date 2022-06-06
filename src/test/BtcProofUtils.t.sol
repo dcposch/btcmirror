@@ -256,109 +256,95 @@ contract BtcProofUtilsTest is DSTest {
     function testValidatePayment() public {
         bytes32 txId736 = 0x3667d5beede7d89e41b0ec456f99c93d6cc5e5caff4c4a5f993caea477b4b9b9;
         bytes20 destScriptHash = hex"ae2f3d4b06579b62574d6178c10c882b91503740";
-        assertTrue(
-            BtcProofUtils.validatePayment(
-                blockHash736000,
-                header736000,
-                txId736,
-                1,
-                txProof736,
-                tx736,
-                0,
-                destScriptHash,
-                25200000
-            )
+
+        this.validate(
+            true,
+            blockHash736000,
+            BtcTxProof(header736000, txId736, 1, txProof736, tx736),
+            0,
+            destScriptHash,
+            25200000
         );
 
         // Make each argument invalid, one at a time.
         // - Bad block hash
-        assertTrue(
-            !BtcProofUtils.validatePayment(
-                blockHash717695,
-                header736000,
-                txId736,
-                1,
-                txProof736,
-                tx736,
-                0,
-                destScriptHash,
-                25200000
-            )
+        this.validate(
+            false,
+            blockHash717695,
+            BtcTxProof(header736000, txId736, 1, txProof736, tx736),
+            0,
+            destScriptHash,
+            25200000
         );
 
         // - Bad tx proof (doesn't match root)
-        assertTrue(
-            !BtcProofUtils.validatePayment(
-                blockHash717695,
-                headerGood,
-                txId736,
-                1,
-                txProof736,
-                tx736,
-                0,
-                destScriptHash,
-                25200000
-            )
+        this.validate(
+            false,
+            blockHash717695,
+            BtcTxProof(headerGood, txId736, 1, txProof736, tx736),
+            0,
+            destScriptHash,
+            25200000
         );
 
         // - Wrong tx index
-        assertTrue(
-            !BtcProofUtils.validatePayment(
-                blockHash736000,
-                header736000,
-                txId736,
-                2,
-                txProof736,
-                tx736,
-                0,
-                destScriptHash,
-                25200000
-            )
+        this.validate(
+            false,
+            blockHash736000,
+            BtcTxProof(header736000, txId736, 2, txProof736, tx736),
+            0,
+            destScriptHash,
+            25200000
         );
 
         // - Wrong tx output index
-        assertTrue(
-            !BtcProofUtils.validatePayment(
-                blockHash736000,
-                header736000,
-                txId736,
-                1,
-                txProof736,
-                tx736,
-                1,
-                destScriptHash,
-                25200000
-            )
+        this.validate(
+            false,
+            blockHash736000,
+            BtcTxProof(header736000, txId736, 1, txProof736, tx736),
+            1,
+            destScriptHash,
+            25200000
         );
 
         // - Wrong dest script hash
-        assertTrue(
-            !BtcProofUtils.validatePayment(
-                blockHash736000,
-                header736000,
-                txId736,
-                1,
-                txProof736,
-                tx736,
-                0,
-                bytes20(hex"abcd"),
-                25200000
-            )
+        this.validate(
+            false,
+            blockHash736000,
+            BtcTxProof(header736000, txId736, 1, txProof736, tx736),
+            0,
+            bytes20(hex"abcd"),
+            25200000
         );
 
         // - Wrong amount, off by one satoshi
+        this.validate(
+            false,
+            blockHash736000,
+            BtcTxProof(header736000, txId736, 1, txProof736, tx736),
+            0,
+            destScriptHash,
+            25200001
+        );
+    }
+
+    function validate(
+        bool expected,
+        bytes32 blockHash,
+        BtcTxProof calldata txProof,
+        uint256 txOutIx,
+        bytes20 destScriptHash,
+        uint256 sats
+    ) public {
         assertTrue(
-            !BtcProofUtils.validatePayment(
-                blockHash736000,
-                header736000,
-                txId736,
-                1,
-                txProof736,
-                tx736,
-                0,
-                destScriptHash,
-                25200001
-            )
+            expected ==
+                BtcProofUtils.validatePayment(
+                    blockHash,
+                    txProof,
+                    txOutIx,
+                    destScriptHash,
+                    sats
+                )
         );
     }
 }

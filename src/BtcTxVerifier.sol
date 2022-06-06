@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
 
-import "./BtcMirror.sol";
+import "./interfaces/IBtcMirror.sol";
+import "./interfaces/IBtcTxVerifier.sol";
+import "./BtcProofUtils.sol";
 
 //
 //                                        #
@@ -26,18 +28,42 @@ import "./BtcMirror.sol";
 // BtcVerifier implements a Merkle proof that a Bitcoin payment succeeded. It
 // uses BtcMirror as a source of truth for which Bitcoin block hashes are in the
 // canonical chain.
-contract BtcVerifier {
-    BtcMirror immutable mirror;
+contract BtcTxVerifier is IBtcTxVerifier {
+    IBtcMirror immutable mirror;
 
-    constructor(address _mirror) {
-        mirror = BtcMirror(_mirror);
+    constructor(IBtcMirror _mirror) {
+        mirror = _mirror;
     }
 
-    function verify(int256 blockNum, bytes calldata proof)
-        public
-        view
-        returns (bool)
-    {
-        // TODO
+    function verifyPayment(
+        uint256 minConfirmations,
+        uint256 blockNum,
+        BtcTxProof calldata inclusionProof,
+        uint256 txOutIx,
+        bytes20 recipientScriptHash,
+        uint256 amountSats
+    ) external view returns (bool) {
+        {
+            require(
+                mirror.getLatestBlockHeight() + 1 >=
+                    minConfirmations + blockNum,
+                "Not enough Bitcoin block confirmations"
+            );
+        }
+
+        bytes32 blockHash = mirror.getBlockHash(blockNum);
+
+        require(
+            BtcProofUtils.validatePayment(
+                blockHash,
+                inclusionProof,
+                txOutIx,
+                recipientScriptHash,
+                amountSats
+            ),
+            "Invalid transaction proof"
+        );
+
+        return true;
     }
 }

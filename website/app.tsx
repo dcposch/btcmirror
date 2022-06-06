@@ -114,10 +114,10 @@ function Docs() {
           <li>
             <em>Trust-minimized BTC/ETH swaps.</em> Bob deploys an exchange
             contract and holds Bitcoin. To trade ETH to BTC, you first send ETH
-            to the smart contract; by default, you can withdraw it again a day
-            later. To keep the ETH, Bob posts a proof that he's sent you the
-            corresponding amount of BTC. The opposite direction is even cleaner.
-            You send Bitcoin to Bob's addesss, then submit a proof to the
+            to the smart contract. By default, you can take it back a day later.
+            To keep the ETH, Bob posts a proof that he's sent you the
+            corresponding amount of BTC. The opposite direction is even easier.
+            You send Bitcoin to Bob's address, then submit a proof to the
             exchange contract to claim ETH.
           </li>
           <li>

@@ -46,12 +46,12 @@ const chains: Chain[] = [
       "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
     explorerText: "View contract on Blockscout",
     description:
-      "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2 and should not be used for high value assets. It's nearly free. I spent <$2 for 10k Bitcoin blocks = 3 months.",
+      "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2.",
   },
 ];
 
 export default function LiveStatus() {
-  const [chainId, setChainId] = useState("zksync2");
+  const [chainId, setChainId] = useState("xdai");
   const chain = chains.find((c) => c.id === chainId);
 
   if (chain.contract == null) {

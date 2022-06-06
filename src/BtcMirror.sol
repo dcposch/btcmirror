@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
 import "./Endian.sol";
+import "./interfaces/IBtcMirror.sol";
 
 //
 //                                        #
@@ -32,7 +33,7 @@ import "./Endian.sol";
 // Bitcoin hash power is honest and at least one person is running the submitter
 // script, the BtcMirror contract always reports the current canonical Bitcoin
 // chain.
-contract BtcMirror {
+contract BtcMirror is IBtcMirror {
     /**
      * Emitted whenever the contract accepts a new heaviest chain.
      */
@@ -58,13 +59,16 @@ contract BtcMirror {
 
     uint256 private expectedTarget;
 
-    constructor() {
-        // start at block #717694, two  blocks before retarget
-        bytes32 blockHash = 0x0000000000000000000b3dd6d6062aa8b7eb99d033fe29e507e0a0d81b5eaeed;
-        blockHeightToHash[717694] = blockHash;
-        latestBlockHeight = 717694;
-        latestBlockTime = 1641627092;
-        expectedTarget = 0x0000000000000000000B98AB0000000000000000000000000000000000000000;
+    constructor(
+        uint256 blockHeight,
+        bytes32 blockHash,
+        uint256 blockTime,
+        uint256 initialExpectedTarget
+    ) {
+        blockHeightToHash[blockHeight] = blockHash;
+        latestBlockHeight = blockHeight;
+        latestBlockTime = blockTime;
+        expectedTarget = initialExpectedTarget;
     }
 
     /**

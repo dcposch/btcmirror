@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "./Endian.sol";
+import "./interfaces/BtcTxProof.sol";
 
 /**
  * @dev A parsed (but NOT fully validated) Bitcoin transaction.
@@ -87,34 +88,34 @@ library BtcProofUtils {
      */
     function validatePayment(
         bytes32 blockHash,
-        bytes calldata blockHeader,
-        bytes32 txId,
-        uint256 txIndex,
-        bytes calldata txMerkleProof,
-        bytes calldata rawTx,
+        BtcTxProof calldata txProof,
         uint256 txOutIx,
         bytes20 recipientScriptHash,
         uint256 satoshisExpected
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         // 5. Block header to block hash
-        if (getBlockHash(blockHeader) != blockHash) {
+        if (getBlockHash(txProof.blockHeader) != blockHash) {
             return false;
         }
 
         // 4. and 3. Transaction ID included in block
-        bytes32 blockTxRoot = getBlockTxMerkleRoot(blockHeader);
-        bytes32 txRoot = getTxMerkleRoot(txId, txIndex, txMerkleProof);
+        bytes32 blockTxRoot = getBlockTxMerkleRoot(txProof.blockHeader);
+        bytes32 txRoot = getTxMerkleRoot(
+            txProof.txId,
+            txProof.txIndex,
+            txProof.txMerkleProof
+        );
         if (blockTxRoot != txRoot) {
             return false;
         }
 
         // 2. Raw transaction to TxID
-        if (getTxID(rawTx) != txId) {
+        if (getTxID(txProof.rawTx) != txProof.txId) {
             return false;
         }
 
         // 1. Finally, validate raw transaction pays stated recipient.
-        BitcoinTx memory parsedTx = parseBitcoinTx(rawTx);
+        BitcoinTx memory parsedTx = parseBitcoinTx(txProof.rawTx);
         BitcoinTxOut memory txo = parsedTx.outputs[txOutIx];
         bytes20 actualScriptHash = getP2SH(txo.scriptLen, txo.script);
         if (recipientScriptHash != actualScriptHash) {
