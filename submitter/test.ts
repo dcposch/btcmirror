@@ -18,25 +18,16 @@ async function main() {
   console.log(`Latest block height: ${latestHeight}`);
 
   const blockHash =
-    //    "00000000000000000002d52d9816a419b45f1f0efe9a9df4f7b64161e508323d";
-    "000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506";
+    "00000000000000000001059a330a05e66e4fa2d1a5adcd56d1bfefc5c114195d";
   const blockHeader = await getBlockHeader(btcRpc, blockHash);
-  console.log(`Raw block 736000: ${blockHeader}`);
+  console.log(`Raw block 739000: ${blockHeader}`);
 
   const txId =
-    "3667d5beede7d89e41b0ec456f99c93d6cc5e5caff4c4a5f993caea477b4b9b9";
+    "13cd6e3ae96a85bb567a681fbb339719d030cf7d8936cdfc6803069b42774052";
   const rawTx = await getRawTransaction(btcRpc, txId, blockHash);
-  console.log(`Raw tx 736000 #2: ${rawTx}`);
+  console.log(`Raw tx 739000 #2: ${rawTx}`);
 
-  // For segwit, need to use the old tx serialization format.
-  // let buf = createHash("sha256").update(Buffer.from(rawTx, "hex")).digest();
-  // buf = createHash("sha256").update(buf).digest();
-  // console.log(`Reconstructed txid: ${buf.toString("hex")}`);
-
-  // const bh = "00000000000000000002d52d9816a419b45f1f0efe9a9df4f7b64161e508323d";
-  const bh = "000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506";
-  // const bh = "00000000000080b66c911bd5ba14a74260057311eaeb1982802f7010f1a9f090";
-  const { hash, height, merkleroot, tx } = await getBlock(btcRpc, bh);
+  const { hash, height, merkleroot, tx } = await getBlock(btcRpc, blockHash);
   const calcRoot = getMerkleRoot(tx);
   console.log(`Block: ${hash} stated root ${merkleroot} recalc'd ${calcRoot}`);
 

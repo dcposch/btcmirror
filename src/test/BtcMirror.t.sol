@@ -59,10 +59,13 @@ contract BtcMirrorTest is DSTest {
 
     function testGetTarget() public {
         BtcMirror mirror = createBtcMirror();
-        uint256 expectedTarget = 0x0000000000000000000B8C8B0000000000000000000000000000000000000000;
+        uint256 expectedTarget;
+        expectedTarget = 0x0000000000000000000B8C8B0000000000000000000000000000000000000000;
         assertEq(mirror.getTarget(hex"8b8c0b17"), expectedTarget);
         expectedTarget = 0x00000000000404CB000000000000000000000000000000000000000000000000;
         assertEq(mirror.getTarget(hex"cb04041b"), expectedTarget);
+        expectedTarget = 0x000000000000000000096A200000000000000000000000000000000000000000;
+        assertEq(mirror.getTarget(hex"206a0917"), expectedTarget);
     }
 
     function testSubmitError() public {
