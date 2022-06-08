@@ -87,15 +87,15 @@ contract BtcTxVerifierTest is DSTest {
         assertTrue(verif.verifyPayment(1, 736000, txP, 0, destSH, 25200000));
 
         vm.expectRevert("Not enough Bitcoin block confirmations");
-        assertTrue(!verif.verifyPayment(2, 736000, txP, 0, destSH, 2520000));
+        assertTrue(!verif.verifyPayment(2, 736000, txP, 0, destSH, 25200000));
 
-        vm.expectRevert("Invalid transaction proof");
+        vm.expectRevert("Underpayment");
         assertTrue(!verif.verifyPayment(1, 736000, txP, 0, destSH, 25200001));
 
-        vm.expectRevert("Invalid transaction proof");
+        vm.expectRevert("Script hash mismatch");
         assertTrue(!verif.verifyPayment(1, 736000, txP, 1, destSH, 25200000));
 
-        vm.expectRevert("Invalid transaction proof");
+        vm.expectRevert("Block hash mismatch");
         assertTrue(!verif.verifyPayment(1, 700000, txP, 0, destSH, 25200000));
     }
 }

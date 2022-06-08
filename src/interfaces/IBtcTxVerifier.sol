@@ -15,7 +15,7 @@ interface IBtcTxVerifier {
         uint256 blockNum,
         BtcTxProof calldata inclusionProof,
         uint256 txOutIx,
-        bytes20 recipientScriptHash,
+        bytes20 destScriptHash,
         uint256 amountSats
     ) external view returns (bool);
 }

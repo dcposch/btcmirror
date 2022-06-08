@@ -85,18 +85,21 @@ library BtcProofUtils {
      * 3. Transaction ID appears under transaction root (Merkle proof).
      * 4. Transaction root is part of the block header.
      * 5. Block header hashes to a given block hash.
+     *
+     * Always returns true or reverts with a descriptive reason.
      */
     function validatePayment(
         bytes32 blockHash,
         BtcTxProof calldata txProof,
         uint256 txOutIx,
-        bytes20 recipientScriptHash,
+        bytes20 destScriptHash,
         uint256 satoshisExpected
     ) internal pure returns (bool) {
         // 5. Block header to block hash
-        if (getBlockHash(txProof.blockHeader) != blockHash) {
-            return false;
-        }
+        require(
+            getBlockHash(txProof.blockHeader) == blockHash,
+            "Block hash mismatch"
+        );
 
         // 4. and 3. Transaction ID included in block
         bytes32 blockTxRoot = getBlockTxMerkleRoot(txProof.blockHeader);
@@ -105,25 +108,17 @@ library BtcProofUtils {
             txProof.txIndex,
             txProof.txMerkleProof
         );
-        if (blockTxRoot != txRoot) {
-            return false;
-        }
+        require(blockTxRoot == txRoot, "Tx merkle root mismatch");
 
         // 2. Raw transaction to TxID
-        if (getTxID(txProof.rawTx) != txProof.txId) {
-            return false;
-        }
+        require(getTxID(txProof.rawTx) == txProof.txId, "Tx ID mismatch");
 
         // 1. Finally, validate raw transaction pays stated recipient.
         BitcoinTx memory parsedTx = parseBitcoinTx(txProof.rawTx);
         BitcoinTxOut memory txo = parsedTx.outputs[txOutIx];
         bytes20 actualScriptHash = getP2SH(txo.scriptLen, txo.script);
-        if (recipientScriptHash != actualScriptHash) {
-            return false;
-        }
-        if (txo.valueSats < satoshisExpected) {
-            return false;
-        }
+        require(destScriptHash == actualScriptHash, "Script hash mismatch");
+        require(txo.valueSats >= satoshisExpected, "Underpayment");
 
         // We've verified that blockHash contains a P2SH transaction
         // that sends at least satoshisExpected to the given hash.

@@ -3,10 +3,13 @@ pragma solidity >=0.8.0;
 
 import "ds-test/test.sol";
 import "./console.sol";
+import "./vm.sol";
 
 import "../BtcProofUtils.sol";
 
 contract BtcProofUtilsTest is DSTest {
+    Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+
     // correct header for bitcoin block #717695
     // all bitcoin header values are little-endian:
     bytes constant bVer = hex"04002020";
@@ -257,19 +260,18 @@ contract BtcProofUtilsTest is DSTest {
         bytes32 txId736 = 0x3667d5beede7d89e41b0ec456f99c93d6cc5e5caff4c4a5f993caea477b4b9b9;
         bytes20 destScriptHash = hex"ae2f3d4b06579b62574d6178c10c882b91503740";
 
-        this.validate(
-            true,
-            blockHash736000,
-            BtcTxProof(header736000, txId736, 1, txProof736, tx736),
-            0,
-            destScriptHash,
-            25200000
-        );
+        // Should succeed
+        // this.validate(
+        //     blockHash736000,
+        //     BtcTxProof(header736000, txId736, 1, txProof736, tx736),
+        //     0,
+        //     destScriptHash,
+        //     25200000
+        // );
 
         // Make each argument invalid, one at a time.
-        // - Bad block hash
+        vm.expectRevert("Block hash mismatch");
         this.validate(
-            false,
             blockHash717695,
             BtcTxProof(header736000, txId736, 1, txProof736, tx736),
             0,
@@ -278,8 +280,8 @@ contract BtcProofUtilsTest is DSTest {
         );
 
         // - Bad tx proof (doesn't match root)
+        vm.expectRevert("Tx merkle root mismatch");
         this.validate(
-            false,
             blockHash717695,
             BtcTxProof(headerGood, txId736, 1, txProof736, tx736),
             0,
@@ -288,8 +290,8 @@ contract BtcProofUtilsTest is DSTest {
         );
 
         // - Wrong tx index
+        vm.expectRevert("Tx merkle root mismatch");
         this.validate(
-            false,
             blockHash736000,
             BtcTxProof(header736000, txId736, 2, txProof736, tx736),
             0,
@@ -298,8 +300,8 @@ contract BtcProofUtilsTest is DSTest {
         );
 
         // - Wrong tx output index
+        vm.expectRevert("Script hash mismatch");
         this.validate(
-            false,
             blockHash736000,
             BtcTxProof(header736000, txId736, 1, txProof736, tx736),
             1,
@@ -308,8 +310,8 @@ contract BtcProofUtilsTest is DSTest {
         );
 
         // - Wrong dest script hash
+        vm.expectRevert("Script hash mismatch");
         this.validate(
-            false,
             blockHash736000,
             BtcTxProof(header736000, txId736, 1, txProof736, tx736),
             0,
@@ -318,8 +320,8 @@ contract BtcProofUtilsTest is DSTest {
         );
 
         // - Wrong amount, off by one satoshi
+        vm.expectRevert("Underpayment");
         this.validate(
-            false,
             blockHash736000,
             BtcTxProof(header736000, txId736, 1, txProof736, tx736),
             0,
@@ -329,22 +331,18 @@ contract BtcProofUtilsTest is DSTest {
     }
 
     function validate(
-        bool expected,
         bytes32 blockHash,
         BtcTxProof calldata txProof,
         uint256 txOutIx,
         bytes20 destScriptHash,
         uint256 sats
-    ) public {
-        assertTrue(
-            expected ==
-                BtcProofUtils.validatePayment(
-                    blockHash,
-                    txProof,
-                    txOutIx,
-                    destScriptHash,
-                    sats
-                )
+    ) public pure {
+        BtcProofUtils.validatePayment(
+            blockHash,
+            txProof,
+            txOutIx,
+            destScriptHash,
+            sats
         );
     }
 }

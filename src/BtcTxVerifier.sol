@@ -40,7 +40,7 @@ contract BtcTxVerifier is IBtcTxVerifier {
         uint256 blockNum,
         BtcTxProof calldata inclusionProof,
         uint256 txOutIx,
-        bytes20 recipientScriptHash,
+        bytes20 destScriptHash,
         uint256 amountSats
     ) external view returns (bool) {
         {
@@ -58,7 +58,7 @@ contract BtcTxVerifier is IBtcTxVerifier {
                 blockHash,
                 inclusionProof,
                 txOutIx,
-                recipientScriptHash,
+                destScriptHash,
                 amountSats
             ),
             "Invalid transaction proof"
