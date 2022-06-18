@@ -75,7 +75,7 @@ async function main() {
     console.log("not enough new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 1);
+  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 30);
 
   // then, find the most common ancestor
   console.log("finding last common Bitcoin block headers");
@@ -136,7 +136,12 @@ async function main() {
       console.log('Not yet confirmed');
       continue;
     }
-    console.log(receipt);
+    if (receipt.status === 1) {
+      console.log('Transaction succeeded')
+    } else {
+      console.log('Transaction failed')
+      console.log(receipt);
+    }
     break;
   }
 }
