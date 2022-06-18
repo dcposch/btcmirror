@@ -75,7 +75,7 @@ async function main() {
     console.log("not enough new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 30);
+  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 1);
 
   // then, find the most common ancestor
   console.log("finding last common Bitcoin block headers");
@@ -122,12 +122,27 @@ async function main() {
   const ethWallet = new Wallet(ethPK, ethProvider);
   const contractWithSigner = contract.connect(ethWallet);
   const txOptions = { gasLimit: 1000000 };
-  const res = await contractWithSigner.functions["submit"](
+  const tx = await contractWithSigner.functions["submit"](
     submitFromHeight,
     Buffer.from(headersHex, "hex"),
     txOptions
   );
-  console.log("result", res);
+
+  while (true) {
+    console.log(`Submitted ${tx.hash}, waiting for confirmation`);
+    await sleep(1000);
+    const receipt = await ethProvider.getTransactionReceipt(tx.hash);
+    if (receipt == null) {
+      console.log('Not yet confirmed');
+      continue;
+    }
+    console.log(receipt);
+    break;
+  }
+}
+
+function sleep(time: number) {
+    return new Promise((resolve) => setTimeout(resolve, time));
 }
 
 main().then(() => console.log("done"));
