@@ -59,16 +59,20 @@ contract BtcMirror is IBtcMirror {
 
     uint256 private expectedTarget;
 
+    bool public isTestnet;
+
     constructor(
-        uint256 blockHeight,
-        bytes32 blockHash,
-        uint256 blockTime,
-        uint256 initialExpectedTarget
+        uint256 _blockHeight,
+        bytes32 _blockHash,
+        uint256 _blockTime,
+        uint256 _expectedTarget,
+        bool _isTestnet
     ) {
-        blockHeightToHash[blockHeight] = blockHash;
-        latestBlockHeight = blockHeight;
-        latestBlockTime = blockTime;
-        expectedTarget = initialExpectedTarget;
+        blockHeightToHash[_blockHeight] = _blockHash;
+        latestBlockHeight = _blockHeight;
+        latestBlockTime = _blockTime;
+        expectedTarget = _expectedTarget;
+        isTestnet = _isTestnet;
     }
 
     /**
@@ -166,22 +170,34 @@ contract BtcMirror is IBtcMirror {
     function submitBlock(uint256 blockHeight, bytes calldata blockHeader)
         private
     {
+        // compute the block hash
         assert(blockHeader.length == 80);
+        uint256 blockHashNum = Endian.reverse256(
+            uint256(sha256(abi.encode(sha256(blockHeader))))
+        );
 
+        // optimistically save the block hash
+        // we'll revert if the header turns out to be invalid
+        blockHeightToHash[blockHeight] = bytes32(blockHashNum);
+
+        // verify previous hash
         bytes32 prevHash = bytes32(
             Endian.reverse256(uint256(bytes32(blockHeader[4:36])))
         );
         require(prevHash == blockHeightToHash[blockHeight - 1], "bad parent");
         require(prevHash != bytes32(0), "parent block not yet submitted");
 
-        uint256 blockHashNum = Endian.reverse256(
-            uint256(sha256(abi.encode(sha256(blockHeader))))
-        );
-
         // verify proof-of-work
         bytes32 bits = bytes32(blockHeader[72:76]);
         uint256 target = getTarget(bits);
         require(blockHashNum < target, "block hash above target");
+
+        // ignore difficulty update rules on testnet
+        // Bitcoin testnet has some clown hacks regarding difficulty:
+        // https://blog.lopp.net/the-block-storms-of-bitcoins-testnet/
+        if (isTestnet) {
+            return;
+        }
 
         // support once-every-2016-blocks retargeting
         if (blockHeight % 2016 == 0) {
@@ -193,8 +209,6 @@ contract BtcMirror is IBtcMirror {
         } else {
             require(target == expectedTarget, "wrong difficulty bits");
         }
-
-        blockHeightToHash[blockHeight] = bytes32(blockHashNum);
     }
 
     function getTarget(bytes32 bits) public pure returns (uint256) {

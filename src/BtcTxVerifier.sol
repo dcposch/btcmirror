@@ -44,9 +44,15 @@ contract BtcTxVerifier is IBtcTxVerifier {
         uint256 amountSats
     ) external view returns (bool) {
         {
+            uint256 mirrorHeight = mirror.getLatestBlockHeight();
+
             require(
-                mirror.getLatestBlockHeight() + 1 >=
-                    minConfirmations + blockNum,
+                mirrorHeight >= blockNum,
+                "Bitcoin Mirror doesn't have that block yet"
+            );
+
+            require(
+                mirrorHeight + 1 >= minConfirmations + blockNum,
                 "Not enough Bitcoin block confirmations"
             );
         }
