@@ -14,16 +14,27 @@ interface Chain {
 }
 
 const chains: Chain[] = [
+  // {
+  //   id: "zksync2",
+  //   name: "ZKSYNC",
+  //   rpcUrl: "https://zksync2-testnet.zksync.dev",
+  //   contractAddr: "0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27",
+  //   explorerUrl:
+  //     "https://zksync2-testnet.zkscan.io/address/0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27/transactions",
+  //   explorerText: "View contract on zkSync2 Alpha Testnet",
+  //   description:
+  //     "Bitcoin Mirror would be prohibitively expensive on L1. zkSync2 is the first EVM-compatible L2 zkrollup. This allows some beautiful gas-saving optimizations. It's currently a testnet.",
+  // },
   {
-    id: "zksync2",
-    name: "ZKSYNC",
-    rpcUrl: "https://zksync2-testnet.zksync.dev",
-    contractAddr: "0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27",
+    id: "rop",
+    name: "ROPSTEN",
+    rpcUrl: "https://ropsten.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
+    contractAddr: "0x1257a8399d5bb83d18b95d6217e301e85665906b",
     explorerUrl:
-      "https://zksync2-testnet.zkscan.io/address/0x8f562B0ADd56A9FaCd9E42A51D874BA17f616B27/transactions",
-    explorerText: "View contract on zkSync2 Alpha Testnet",
+      "https://ropsten.etherscan.io/address/0x1257a8399d5bb83d18b95d6217e301e85665906b#events",
+    explorerText: "View contract on Etherscan",
     description:
-      "Bitcoin Mirror would be prohibitively expensive on L1. zkSync2 is the first EVM-compatible L2 zkrollup. This allows some beautiful gas-saving optimizations. It's currently a testnet.",
+      "Ropsten is an Ethereum testnet, fully merged, running proof-of-stake. This Bitcoin Mirror deployment tracks testnet Bitcoin.",
   },
   {
     id: "opt",
@@ -37,22 +48,22 @@ const chains: Chain[] = [
     description:
       "Bitcoin Mirror would be prohibitively expensive on L1. Optimism is a pioneering L2 optimistic rollup. It's over 10x cheaper, but still too expensive. I burned 0.5eth in a few weeks before giving up. After EIP 4844, Optimism will be much cheaper, and this contract will be up to date again.",
   },
-  {
-    id: "xdai",
-    name: "XDAI",
-    rpcUrl: "https://rpc.xdaichain.com",
-    contractAddr: "0x24e7091d7e01750f467d4272839acb6b5404dac5",
-    explorerUrl:
-      "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
-    explorerText: "View contract on Blockscout",
-    description:
-      "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2.",
-  },
+  // {
+  //   id: "xdai",
+  //   name: "XDAI",
+  //   rpcUrl: "https://rpc.xdaichain.com",
+  //   contractAddr: "0x24e7091d7e01750f467d4272839acb6b5404dac5",
+  //   explorerUrl:
+  //     "https://blockscout.com/xdai/mainnet/address/0x24e7091d7e01750f467d4272839acb6b5404dac5/logs",
+  //   explorerText: "View contract on Blockscout",
+  //   description:
+  //     "Gnosis Chain, fka xdai, is a fantastic prototyping tool. It lets you experience the Ethereum endgame state today: full EVM compatibility, high throughput, low gas fees. It's a centralized sidechain, so it lacks the strong guarantees of L1 and L2.",
+  // },
 ];
 
 export default function LiveStatus() {
-  const [chainId, setChainId] = useState("xdai");
-  const chain = chains.find((c) => c.id === chainId);
+  const [chainId, setChainId] = useState("rop");
+  const chain = chains.find((c) => c.id === chainId)!;
 
   if (chain.contract == null) {
     chain.contract = new BtcMirrorContract(chain.rpcUrl, chain.contractAddr);
@@ -72,9 +83,9 @@ export default function LiveStatus() {
     if (chainId === status.chainId) return;
     (async () => {
       const cid = chainId;
-      const latestHeight = await chain.contract.getLatestBlockHeight();
+      const latestHeight = await chain.contract!.getLatestBlockHeight();
       const promises = [...Array(numBlocksToShow).keys()].map((i) =>
-        chain.contract.getBlockHash(latestHeight - i)
+        chain.contract!.getBlockHash(latestHeight - i)
       );
       const latestHashes = await Promise.all(promises);
       if (cid !== chainId) return; // stale, ignore
