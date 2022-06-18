@@ -28,8 +28,10 @@ export function createGetblockClient(apiKey?: String) {
     if (!apiKey) throw new Error("Missing GETBLOCK_API_KEY & no apiKey passed");
   }
 
+  const network = process.env.GETBLOCK_NETWORK || "mainnet";
+
   return new RpcClient<BitcoinJsonRpc>({
-    url: "https://btc.getblock.io/mainnet/",
+    url: `https://btc.getblock.io/${network}/`,
     headers: { "x-api-key": apiKey },
   });
 }
