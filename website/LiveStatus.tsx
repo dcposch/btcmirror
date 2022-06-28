@@ -34,7 +34,7 @@ const chains: Chain[] = [
       "https://ropsten.etherscan.io/address/0x1257a8399d5bb83d18b95d6217e301e85665906b#events",
     explorerText: "View contract on Etherscan",
     description:
-      "Ropsten is an Ethereum testnet, fully merged, running proof-of-stake. This Bitcoin Mirror deployment tracks testnet Bitcoin.",
+      "Ropsten is an Ethereum proof-of-stake testnet. This Bitcoin Mirror deployment tracks testnet Bitcoin.",
   },
   {
     id: "opt",
