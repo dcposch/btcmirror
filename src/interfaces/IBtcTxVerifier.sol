@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "./BtcTxProof.sol";
+import "./IBtcMirror.sol";
 
 /** @notice Verifies Bitcoin transaction proofs. */
 interface IBtcTxVerifier {
@@ -18,4 +19,7 @@ interface IBtcTxVerifier {
         bytes20 destScriptHash,
         uint256 amountSats
     ) external view returns (bool);
+
+    // Returns the underlying IBtcMirror instance associated with this verifier.
+    function mirror() external view returns (IBtcMirror);
 }

@@ -27,7 +27,8 @@ contract BtcTxVerifierTest is DSTest {
             736000, // start at block #736000
             0x00000000000000000002d52d9816a419b45f1f0efe9a9df4f7b64161e508323d,
             0,
-            0x0
+            0x0,
+	    false
         );
         assertEq(mirror.getLatestBlockHeight(), 736000);
 
