@@ -29,7 +29,7 @@ import "./BtcProofUtils.sol";
 // uses BtcMirror as a source of truth for which Bitcoin block hashes are in the
 // canonical chain.
 contract BtcTxVerifier is IBtcTxVerifier {
-    IBtcMirror immutable mirror;
+    IBtcMirror public immutable mirror;
 
     constructor(IBtcMirror _mirror) {
         mirror = _mirror;
