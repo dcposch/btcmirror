@@ -239,6 +239,14 @@ contract BtcProofUtilsTest is DSTest {
     // 1c. finally, verify the recipient of a transaction *output*
     bytes constant b0 = hex"0000000000000000000000000000000000000000";
 
+    // validate a btc testnet tx
+    bytes32 constant testHash = hex"0000000082316dc75c041439bad0de12bd5d63d60072f6d998beab875b7d6bf5";
+    bytes constant testHeader = hex"000000200cfa2057879e93554331d13c3d3e1b4c2ae794266211b67602000000000000008ade4c1f4017cd5c2cfa7591c1c687499bdd795eb025c16bc6f8f6ac741ff0d47cd6f262ffff001d086e3eda";
+    bytes32 constant testTxId = hex"ecc2ee194c359cc6577dadef1f96d5a71fceb1c3dbba4f72bfc86f43e72352c6";
+    bytes constant testTxMerkleProof = hex"e917037ffe1cdbdbb26c7adc0d05211d0f7bcb975fd80c0670918ea5a19677721eb2a119a1dd1d1c26f6094c666224bd95f58bc624dda43105b70ca3f1f06aaa4aff515e71f351a4f89819075f859fd1cab765bd8143ab04b0a6761f9cd9c91e9a71809c5fe1c8c811b778f8e71d63aa0aaf678ed1e949494a74231643c341c23691816e29a9ffcef3c1074b5f8257c9c4feca0df002733365d1d582b9b75e268129cdfc68c29f74506f3366661eb2ce27632c6137bfb8189a8ecddefd9e31b38e3c746e1923677db2431e90092093a645e9e0c78c8f87c58c084f1c27fcea1e";
+    bytes constant testRawTx = hex"0200000001215df3a0486c794d69b9940105d8bc65d9d37d632f99449521beac74f5f371c2010000006b483045022100b434afeab3ffb7eb9d97082a8bacd56e7e6356f069cb2c51fb759737ec52ddc4022069bdb95b64aff3baeb18ee3e5f1684c25f08d8ec0357abaa7a7b34307fde2888012102bed852ebbca239a0be85e8997eeaa936b3831607188b87af14df94af2e27494fffffffff02102700000000000017a91483388e7ddf65a4db7ef18c98954b2ff31fe1210f8719430700000000001976a9146b18ccc784fd682a4842ea767561ab084d9004d588ac00000000";
+
+
     function testGetP2SH() public {
         bytes32 validP2SH = hex"a914ae2f3d4b06579b62574d6178c10c882b9150374087";
         bytes32 invalidP2SH1 = hex"a914ae2f3d4b06579b62574d6178c10c882b9150374086";
@@ -328,6 +336,15 @@ contract BtcProofUtilsTest is DSTest {
             destScriptHash,
             25200001
         );
+
+
+	this.validate(
+	    testHash,
+	    BtcTxProof(testHeader, testTxId, 1, testTxMerkleProof, testRawTx),
+	    0,
+	    hex"83388e7ddf65a4db7ef18c98954b2ff31fe1210f",
+	    1000
+	);
     }
 
     function validate(
