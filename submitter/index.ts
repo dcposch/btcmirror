@@ -75,7 +75,7 @@ async function main() {
     console.log("not enough new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 30);
+  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 20);
 
   // then, find the most common ancestor
   console.log("finding last common Bitcoin block headers");
