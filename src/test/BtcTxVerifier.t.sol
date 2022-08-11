@@ -28,7 +28,7 @@ contract BtcTxVerifierTest is DSTest {
             0x00000000000000000002d52d9816a419b45f1f0efe9a9df4f7b64161e508323d,
             0,
             0x0,
-	    false
+            false
         );
         assertEq(mirror.getLatestBlockHeight(), 736000);
 
@@ -90,7 +90,7 @@ contract BtcTxVerifierTest is DSTest {
         vm.expectRevert("Not enough Bitcoin block confirmations");
         assertTrue(!verif.verifyPayment(2, 736000, txP, 0, destSH, 25200000));
 
-        vm.expectRevert("Underpayment");
+        vm.expectRevert("Amount mismatch");
         assertTrue(!verif.verifyPayment(1, 736000, txP, 0, destSH, 25200001));
 
         vm.expectRevert("Script hash mismatch");

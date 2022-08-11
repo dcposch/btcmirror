@@ -320,7 +320,7 @@ contract BtcProofUtilsTest is DSTest {
         );
 
         // - Wrong amount, off by one satoshi
-        vm.expectRevert("Underpayment");
+        vm.expectRevert("Amount mismatch");
         this.validate(
             blockHash736000,
             BtcTxProof(header736000, txId736, 1, txProof736, tx736),

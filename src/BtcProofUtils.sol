@@ -118,7 +118,7 @@ library BtcProofUtils {
         BitcoinTxOut memory txo = parsedTx.outputs[txOutIx];
         bytes20 actualScriptHash = getP2SH(txo.scriptLen, txo.script);
         require(destScriptHash == actualScriptHash, "Script hash mismatch");
-        require(txo.valueSats >= satoshisExpected, "Underpayment");
+        require(txo.valueSats == satoshisExpected, "Amount mismatch");
 
         // We've verified that blockHash contains a P2SH transaction
         // that sends at least satoshisExpected to the given hash.
