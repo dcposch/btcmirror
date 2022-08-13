@@ -116,6 +116,7 @@ library BtcProofUtils {
         // 1. Finally, validate raw transaction pays stated recipient.
         BitcoinTx memory parsedTx = parseBitcoinTx(txProof.rawTx);
         BitcoinTxOut memory txo = parsedTx.outputs[txOutIx];
+	require(txo.scriptLen <= 32, "scripts over 32 bytes not supported");
         bytes20 actualScriptHash = getP2SH(txo.scriptLen, txo.script);
         require(destScriptHash == actualScriptHash, "Script hash mismatch");
         require(txo.valueSats == satoshisExpected, "Amount mismatch");
@@ -231,7 +232,6 @@ library BtcProofUtils {
             offset += 4;
             uint256 nInScriptBytes;
             (nInScriptBytes, offset) = readVarInt(rawTx, offset);
-            require(nInScriptBytes <= 32, "Scripts over 32 bytes unsupported");
             txIn.scriptLen = uint32(nInScriptBytes);
             txIn.script = bytes32(rawTx[offset:offset + nInScriptBytes]);
             offset += nInScriptBytes;
@@ -254,7 +254,6 @@ library BtcProofUtils {
             offset += 8;
             uint256 nOutScriptBytes;
             (nOutScriptBytes, offset) = readVarInt(rawTx, offset);
-            require(nOutScriptBytes <= 32, "Scripts over 32 bytes unsupported");
             txOut.scriptLen = uint32(nOutScriptBytes);
             txOut.script = bytes32(rawTx[offset:offset + nOutScriptBytes]);
             offset += nOutScriptBytes;
