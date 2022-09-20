@@ -36,8 +36,6 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-    const ethProvider = new ethers.providers.JsonRpcProvider(env.ETH_RPC_URL);
-
     console.log("Running BtcMirror submitter...");
     await submit({
       contractAddr: env.BTCMIRROR_CONTRACT_ADDR,

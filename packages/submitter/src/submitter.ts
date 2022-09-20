@@ -40,10 +40,17 @@ export async function submit(args: SubmitterArgs) {
     throw new Error("ETH_RPC_URL required");
   } else if (args.privateKey == null) {
     throw new Error("ETH_SUBMITTER_PRIVATE_KEY required");
+  } else if (args.getblockApiKey == null) {
+    throw new Error("GETBLOCK_API_KEY required");
+  } else if (args.bitcoinNetwork == null) {
+    throw new Error("BITCOIN_NETWORK required");
   }
 
   console.log(`connecting to Ethereum JSON RPC ${args.rpcUrl}`);
-  const ethProvider = new ethers.providers.JsonRpcProvider(args.rpcUrl);
+  const ethProvider = new ethers.providers.JsonRpcProvider({
+    url: args.rpcUrl,
+    skipFetchSetup: true,
+  });
   const network = await ethProvider.getNetwork();
   const isL2Opt = network.chainId === 10;
   const isL2 = isL2Opt;

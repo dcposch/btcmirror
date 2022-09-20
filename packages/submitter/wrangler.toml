@@ -7,6 +7,8 @@ node_compat = true
 [vars]
 BTCMIRROR_CONTRACT_ADDR="0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229"
 ETH_RPC_URL="https://ropsten.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
+BITCOIN_NETWORK="testnet"
+
 # Secrets: 
 # - ETH_SUBMITTER_PRIVATE_KEY
 # - GETBLOCK_API_KEY

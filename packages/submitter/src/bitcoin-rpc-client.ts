@@ -1,4 +1,4 @@
-import { RpcClient } from "jsonrpc-ts";
+import { JsonRpcClient } from "./json-rpc";
 
 export interface BitcoinJsonRpc {
   getblockcount: [];
@@ -17,7 +17,7 @@ export interface BlockJson {
   tx: string[];
 }
 
-export type BtcRpcClient = RpcClient<BitcoinJsonRpc>;
+type BtcRpcClient = JsonRpcClient;
 
 /**
  * Creates a Bitcoin client pointing to getblock.io
@@ -27,7 +27,7 @@ export function createGetblockClient(
   network: "testnet" | "mainnet"
 ) {
   if (!apiKey) throw new Error("Missing GetBlock API key");
-  return new RpcClient<BitcoinJsonRpc>({
+  return new JsonRpcClient({
     url: `https://btc.getblock.io/${network}/`,
     headers: { "x-api-key": apiKey },
   });
@@ -37,34 +37,22 @@ export async function getBlockHash(
   rpc: BtcRpcClient,
   height: number
 ): Promise<string> {
-  let res = await rpc.makeRequest({
-    method: "getblockhash",
-    params: [height],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblockhash: " + res);
-  const blockHash = res.data.result as string;
+  let res = await rpc.req("getblockhash", [height]);
+  if (res.error) throw new Error("bad getblockhash: " + JSON.stringify(res));
+  const blockHash = res.result as string;
   return blockHash;
 }
 
 export async function getBlockCount(rpc: BtcRpcClient) {
-  const res = await rpc.makeRequest({
-    method: "getblockcount",
-    params: [],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblockcount: " + res);
-  return res.data.result as number;
+  const res = await rpc.req("getblockcount", []);
+  if (res.error) throw new Error("bad getblockcount: " + JSON.stringify(res));
+  return res.result as number;
 }
 
 export async function getBlockHeader(rpc: BtcRpcClient, blockHash: string) {
-  const res = await rpc.makeRequest({
-    method: "getblockheader",
-    params: [blockHash, false],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblockheader: " + res);
-  const headerHex = res.data.result as string;
+  const res = await rpc.req("getblockheader", [blockHash, false]);
+  if (res.error) throw new Error("bad getblockheader: " + JSON.stringify(res));
+  const headerHex = res.result as string;
   return headerHex;
 }
 
@@ -72,13 +60,9 @@ export async function getBlock(
   rpc: BtcRpcClient,
   blockHash: string
 ): Promise<BlockJson> {
-  const res = await rpc.makeRequest({
-    method: "getblock",
-    params: [blockHash, 1],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getblock: " + res);
-  return res.data.result as BlockJson;
+  const res = await rpc.req("getblock", [blockHash, 1]);
+  if (res.error) throw new Error("bad getblock: " + JSON.stringify(res));
+  return res.result as BlockJson;
 }
 
 export async function getRawTransaction(
@@ -86,12 +70,8 @@ export async function getRawTransaction(
   txId: string,
   blockHash: string
 ): Promise<string> {
-  const res = await rpc.makeRequest({
-    method: "getrawtransaction",
-    params: [txId, false, blockHash],
-    jsonrpc: "2.0",
-  });
-  if (res.status !== 200) throw new Error("bad getrawtransaction: " + res);
-  const ret = res.data.result as string;
+  const res = await rpc.req("getrawtransaction", [txId, false, blockHash]);
+  if (res.error) throw new Error("bad getrawtx: " + JSON.stringify(res));
+  const ret = res.result as string;
   return ret;
 }

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "ts-node src/cli.ts",
     "submit-opt": "while true; do ETH_RPC_URL=https://opt-mainnet.g.alchemy.com/v2/UIWZJo9n_JabdfySOspT_ZwZfExy8UUs BTCMIRROR_CONTRACT_ADDR=0x69ee459ca98cbdecf9156b041ee1621513aef0c6 npm start; echo '\n\nSLEEPING FOR 60s...\n\n' && sleep 60; done",
-    "submit-ropsten": "while true; do BITCOIN_NETWORK=testnet ETH_RPC_URL=$ETH_RPC_URL_ROPSTEN BTCMIRROR_CONTRACT_ADDR=0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229 npm start; echo '\n\nSLEEPING...\n\n' && sleep 1; done"
+    "submit-ropsten": "while true; do BITCOIN_NETWORK=testnet ETH_RPC_URL=$ETH_RPC_URL_ROPSTEN BTCMIRROR_CONTRACT_ADDR=0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229 npm start; echo '\n\nSLEEPING...\n\n' && sleep 60; done"
   },
   "author": "",
   "license": "UNLICENSED",
@@ -15,7 +15,6 @@
     "@types/node": "^18.7.18",
     "bitcoin-proof": "^2.0.0",
     "ethers": "^5.5.3",
-    "jsonrpc-ts": "^0.2.1",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   },
