@@ -1,5 +1,5 @@
 {
-  "name": "submitter",
+  "name": "btcmirror-submitter",
   "version": "0.0.1",
   "description": "submits Bitcoin block headers to the BtcMirror contract",
   "repository": "dcposch/btcmirror",

@@ -1,7 +1,3 @@
 # Web
 node_modules/
 website/www/js/
-
-# Forge
-cache/
-out/

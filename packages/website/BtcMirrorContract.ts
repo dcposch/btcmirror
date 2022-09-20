@@ -1,9 +1,6 @@
 import { BigNumber, Contract, ethers } from "ethers";
-import btcMirrorAbiJson = require("../abi/BtcMirror.json");
-
-// workaround forge bug https://github.com/gakonst/foundry/issues/457
-const brokenAbi = btcMirrorAbiJson.abi;
-const abi = brokenAbi.map((func) => Object.assign(func, { constant: null }));
+import btcMirrorJson = require("../contracts/out/BtcMirror.sol/BtcMirror.json");
+const { abi } = btcMirrorJson;
 
 export default class BtcMirrorContract {
   contract: Contract;

@@ -1,0 +1,5 @@
+# Forge
+cache/
+out/*
+!out/BtcMirror.sol
+!out/BtcTxVerifier.sol

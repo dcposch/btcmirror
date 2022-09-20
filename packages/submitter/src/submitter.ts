@@ -7,7 +7,7 @@ import {
   BtcRpcClient,
 } from "./bitcoin-rpc-client";
 
-import btcMirrorAbiJson = require("../../contracts/out/BtcMirror.sol/BtcMirror.json");
+import btcMirrorJson = require("../../contracts/out/BtcMirror.sol/BtcMirror.json");
 
 // We do NOT import '@eth-optimism/contracts'. that package has terrible
 // dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
@@ -55,7 +55,7 @@ export async function submit(args: SubmitterArgs) {
 
   // First, get Ethereum BtcMirror latest block height
   console.log(`connecting to BtcMirror contract ${args.contractAddr}`);
-  const abi = btcMirrorAbiJson.abi;
+  const { abi } = btcMirrorJson;
   const contract = new Contract(args.contractAddr, abi, ethProvider);
   const latestHeightRes = await contract.functions["getLatestBlockHeight"]();
   const mirrorLatestHeight = (latestHeightRes[0] as BigNumber).toNumber();

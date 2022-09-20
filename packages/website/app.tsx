@@ -1,9 +1,9 @@
 import * as React from "react";
 import { CSSProperties, useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import { render } from "react-dom";
 import LiveStatus from "./LiveStatus";
 
-ReactDOM.render(<App />, document.querySelector("#root"));
+render(<App />, document.querySelector("#root"));
 
 function App() {
   return (
