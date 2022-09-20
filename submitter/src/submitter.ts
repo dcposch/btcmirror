@@ -1,44 +1,54 @@
-import { RpcClient } from "jsonrpc-ts";
-
 import { BigNumber, Contract, ethers, Wallet } from "ethers";
-
-import btcMirrorAbiJson = require("../abi/BtcMirror.json");
-
-// we do NOT import '@eth-optimism/contracts'. that package has terrible
-// dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
-// all we need is a plain ABI json and a contract address:
-import optGPOAbi = require("../abi/OptimismGasPriceOracle.json");
 import {
   createGetblockClient,
   getBlockCount,
   getBlockHash,
   getBlockHeader,
 } from "./bitcoin-rpc-client";
+
+import btcMirrorAbiJson = require("../../abi/BtcMirror.json");
+
+// we do NOT import '@eth-optimism/contracts'. that package has terrible
+// dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
+// all we need is a plain ABI json and a contract address:
+import optGPOAbi = require("../../abi/OptimismGasPriceOracle.json");
 const optGPOAddr = "0x420000000000000000000000000000000000000F";
 
-const ethApi = process.env.ETH_RPC_URL;
-const ethPK = process.env.ETH_SUBMITTER_PRIVATE_KEY;
-const btcMirrorContractAddr = process.argv[2];
+interface SubmitterArgs {
+  /** Bitcoin Mirror contract address */
+  contractAddr: string;
+  /** Ethereum RPC URL */
+  rpcUrl: string;
+  /** Eth private key, hex. */
+  privateKey: string;
+  /** GetBlock Bitcoin API key. */
+  getblockApiKey: string;
+  /** Bitcoin network, testnet or mainnet */
+  bitcoinNetwork: "testnet" | "mainnet";
+}
 
-async function main() {
-  if (btcMirrorContractAddr == null) {
-    throw new Error("usage: npm start -- <BtcMirror contract address>");
-  } else if (ethApi == null) {
+const MAX_BTC_BLOCKS_PER_TX = 200; // Prove that many BTC txs at once.
+
+export async function submit(args: SubmitterArgs) {
+  console.log(`Running BtcMirror submitter ${JSON.stringify(args)}`);
+  if (args.contractAddr == null) {
+    throw new Error("BTCMIRROR_CONTRACT_ADDR required");
+  } else if (args.rpcUrl == null) {
     throw new Error("ETH_RPC_URL required");
-  } else if (ethPK == null) {
+  } else if (args.privateKey == null) {
     throw new Error("ETH_SUBMITTER_PRIVATE_KEY required");
   }
 
   // first, get Ethereum BtcMirror latest block height
-  console.log(`connecting to Ethereum JSON RPC ${ethApi}`);
-  const ethProvider = new ethers.providers.JsonRpcProvider(ethApi);
-  console.log(`connecting to BtcMirror contract ${btcMirrorContractAddr}`);
+  console.log(`connecting to Ethereum JSON RPC ${args.rpcUrl}`);
+  const ethProvider = new ethers.providers.JsonRpcProvider(args.rpcUrl);
+  console.log(`connecting to BtcMirror contract ${args.contractAddr}`);
 
   const network = await ethProvider.getNetwork();
   const isL2Opt = network.chainId === 10;
-  const isL2Zksync = ethApi.includes("zksync");
+  const isL2Zksync = args.rpcUrl.includes("zksync");
   const isL2 = isL2Opt || isL2Zksync;
-  console.log(`Network: ${network.chainId} ${network.name} ${ethApi}`);
+  console.log(`Network: ${network.chainId} ${network.name} ${args.rpcUrl}`);
   if (isL2Opt) {
     // optimism. bail if the gas cost is too high
     const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
@@ -57,13 +67,13 @@ async function main() {
   const brokenAbi = btcMirrorAbiJson.abi;
   const abi = brokenAbi.map((func) => Object.assign(func, { constant: null }));
 
-  const contract = new Contract(btcMirrorContractAddr, abi, ethProvider);
+  const contract = new Contract(args.contractAddr, abi, ethProvider);
   const latestHeightRes = await contract.functions["getLatestBlockHeight"]();
   const mirrorLatestHeight = (latestHeightRes[0] as BigNumber).toNumber();
   console.log("got BtcMirror latest block height: " + mirrorLatestHeight);
 
   // then, get Bitcoin latest block height
-  const rpc = createGetblockClient();
+  const rpc = createGetblockClient(args.getblockApiKey, args.bitcoinNetwork);
   const btcLatestHeight = await getBlockCount(rpc);
   console.log("got BTC latest block height: " + btcLatestHeight);
   if (btcLatestHeight <= mirrorLatestHeight) {
@@ -75,11 +85,20 @@ async function main() {
     console.log("not enough new blocks");
     return;
   }
-  const targetHeight = Math.min(btcLatestHeight, mirrorLatestHeight + 20);
+  const targetHeight = Math.min(
+    btcLatestHeight,
+    mirrorLatestHeight + MAX_BTC_BLOCKS_PER_TX
+  );
 
   // then, find the most common ancestor
+  const prefetch = {};
+  for (let height = mirrorLatestHeight + 1; height <= targetHeight; height++) {
+    console.log(`prefetching ${height}...`);
+    prefetch[height] = getBlockHash(rpc, height);
+  }
+
   console.log("finding last common Bitcoin block headers");
-  let lastCommonHeight;
+  let lastCommonHeight: number;
   const btcHeightToHash = [];
   for (let height = targetHeight; ; height--) {
     const mirrorResult =
@@ -87,14 +106,14 @@ async function main() {
         ? ["n/a"]
         : await contract.functions["getBlockHash"](height);
     const mirrorHash = (mirrorResult[0] as string).replace("0x", "");
-    const btcHash = await getBlockHash(rpc, height);
+    const btcHash = await (prefetch[height] || getBlockHash(rpc, height));
     btcHeightToHash[height] = btcHash;
     console.log(`height ${height} btc ${btcHash} btcmirror ${mirrorHash}`);
     if (btcHash === mirrorHash) {
       lastCommonHeight = height;
       break;
-    } else if (height === targetHeight - 50) {
-      throw new Error("no common hash in last 50 blocks. catastrophic reorg?");
+    } else if (height === targetHeight - MAX_BTC_BLOCKS_PER_TX) {
+      throw new Error("no common hash found. catastrophic reorg?");
     }
   }
   const lcHash = btcHeightToHash[lastCommonHeight];
@@ -107,8 +126,8 @@ async function main() {
     const hash = btcHeightToHash[height];
     promises.push(getBlockHeader(rpc, hash));
   }
-  const hashes = await Promise.all(promises);
-  const headersHex = hashes.join("");
+  const headers = await Promise.all(promises);
+  const headersHex = headers.join("");
   console.log(`got BTC block headers ${submitFromHeight}: ${headersHex}`);
 
   const nSubmit = targetHeight - submitFromHeight + 1;
@@ -119,9 +138,9 @@ async function main() {
 
   // finally, submit a transaction to update the BTCMirror
   console.log(`submitting BtcMirror ${submitFromHeight} ${headersHex}`);
-  const ethWallet = new Wallet(ethPK, ethProvider);
+  const ethWallet = new Wallet(args.privateKey, ethProvider);
   const contractWithSigner = contract.connect(ethWallet);
-  const txOptions = { gasLimit: 1000000 };
+  const txOptions = { gasLimit: 100000 + 30000 * headers.length };
   const tx = await contractWithSigner.functions["submit"](
     submitFromHeight,
     Buffer.from(headersHex, "hex"),
@@ -133,13 +152,13 @@ async function main() {
     await sleep(1000);
     const receipt = await ethProvider.getTransactionReceipt(tx.hash);
     if (receipt == null) {
-      console.log('Not yet confirmed');
+      console.log("Not yet confirmed");
       continue;
     }
     if (receipt.status === 1) {
-      console.log('Transaction succeeded')
+      console.log("Transaction succeeded");
     } else {
-      console.log('Transaction failed')
+      console.log("Transaction failed");
       console.log(receipt);
     }
     break;
@@ -147,7 +166,5 @@ async function main() {
 }
 
 function sleep(time: number) {
-    return new Promise((resolve) => setTimeout(resolve, time));
+  return new Promise((resolve) => setTimeout(resolve, time));
 }
-
-main().then(() => console.log("done"));

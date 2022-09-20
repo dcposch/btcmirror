@@ -1,0 +1,18 @@
+name = "btcmirror-submitter"
+
+main = "src/index.ts"
+compatibility_date = "2022-09-19"
+node_compat = true
+
+[vars]
+BTCMIRROR_CONTRACT_ADDR="0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229"
+ETH_RPC_URL="https://ropsten.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
+ETH_SUBMITTER_PRIVATE_KEY="e1fb99826f967db56ae6da73f5e071d707c4ed865da8d77908735e6d9816932e"
+GETBLOCK_API_KEY="3e41068c-2b9f-4c68-8914-52e5a7447e18"
+# Secrets: 
+# - ETH_SUBMITTER_PRIVATE_KEY
+# - GETBLOCK_API_KEY
+# Run `echo <val> | wrangler secret put <key>`
+
+[triggers]
+crons = [ "* * * * *" ]
