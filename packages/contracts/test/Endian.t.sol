@@ -1,11 +1,9 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import "ds-test/test.sol";
-import "./console.sol";
-import "./vm.sol";
+import "forge-std/Test.sol";
 
-import "../Endian.sol";
+import "../src/Endian.sol";
 
 contract EndianTest is DSTest {
     function test32() public {
