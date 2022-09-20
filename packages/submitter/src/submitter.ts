@@ -6,13 +6,13 @@ import {
   getBlockHeader,
 } from "./bitcoin-rpc-client";
 
-import btcMirrorAbiJson = require("../../abi/BtcMirror.json");
+import btcMirrorAbiJson = require("../../contracts/out/BtcMirror.sol/BtcMirror.json");
 
 // we do NOT import '@eth-optimism/contracts'. that package has terrible
 // dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
 // all we need is a plain ABI json and a contract address:
-import optGPOAbi = require("../../abi/OptimismGasPriceOracle.json");
-const optGPOAddr = "0x420000000000000000000000000000000000000F";
+// import optGPOAbi = require("../../abi/OptimismGasPriceOracle.json");
+// const optGPOAddr = "0x420000000000000000000000000000000000000F";
 
 interface SubmitterArgs {
   /** Bitcoin Mirror contract address */
@@ -44,24 +44,24 @@ export async function submit(args: SubmitterArgs) {
   const ethProvider = new ethers.providers.JsonRpcProvider(args.rpcUrl);
   console.log(`connecting to BtcMirror contract ${args.contractAddr}`);
 
-  const network = await ethProvider.getNetwork();
-  const isL2Opt = network.chainId === 10;
-  const isL2Zksync = args.rpcUrl.includes("zksync");
-  const isL2 = isL2Opt || isL2Zksync;
-  console.log(`Network: ${network.chainId} ${network.name} ${args.rpcUrl}`);
-  if (isL2Opt) {
-    // optimism. bail if the gas cost is too high
-    const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
-    const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
-    const l1BaseFeeGwei = Math.round(l1BaseFeeRes[0] / 1e9);
-    console.log(`optimism L1 basefee: ${l1BaseFeeGwei} gwei`);
+  // const network = await ethProvider.getNetwork();
+  // const isL2Opt = network.chainId === 10;
+  // const isL2Zksync = args.rpcUrl.includes("zksync");
+  // const isL2 = isL2Opt || isL2Zksync;
+  // console.log(`Network: ${network.chainId} ${network.name} ${args.rpcUrl}`);
+  // if (isL2Opt) {
+  //   // optimism. bail if the gas cost is too high
+  //   const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
+  //   const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
+  //   const l1BaseFeeGwei = Math.round(l1BaseFeeRes[0] / 1e9);
+  //   console.log(`optimism L1 basefee: ${l1BaseFeeGwei} gwei`);
 
-    const maxBaseFee = 50;
-    if (l1BaseFeeGwei > maxBaseFee) {
-      console.log(`quitting, max base fee > ${maxBaseFee}`);
-      return;
-    }
-  }
+  //   const maxBaseFee = 50;
+  //   if (l1BaseFeeGwei > maxBaseFee) {
+  //     console.log(`quitting, max base fee > ${maxBaseFee}`);
+  //     return;
+  //   }
+  // }
 
   // workaround forge bug https://github.com/gakonst/foundry/issues/457
   const brokenAbi = btcMirrorAbiJson.abi;
@@ -80,11 +80,11 @@ export async function submit(args: SubmitterArgs) {
     console.log("no new blocks");
     return;
   }
-  if (isL2 && btcLatestHeight <= mirrorLatestHeight + 10) {
-    // save gas
-    console.log("not enough new blocks");
-    return;
-  }
+  // if (isL2 && btcLatestHeight <= mirrorLatestHeight + 10) {
+  //   // save gas
+  //   console.log("not enough new blocks");
+  //   return;
+  // }
   const targetHeight = Math.min(
     btcLatestHeight,
     mirrorLatestHeight + MAX_BTC_BLOCKS_PER_TX

@@ -1,11 +1,9 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import "ds-test/test.sol";
-import "./console.sol";
-import "./vm.sol";
+import "forge-std/Test.sol";
 
-import "../BtcProofUtils.sol";
+import "../src/BtcProofUtils.sol";
 
 contract BtcProofUtilsTest is DSTest {
     Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);

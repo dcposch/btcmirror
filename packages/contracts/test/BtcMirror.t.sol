@@ -1,11 +1,9 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import "ds-test/test.sol";
-import "./console.sol";
-import "./vm.sol";
+import "forge-std/Test.sol";
 
-import "../BtcMirror.sol";
+import "../src/BtcMirror.sol";
 
 contract BtcMirrorTest is DSTest {
     Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -104,7 +102,7 @@ contract BtcMirrorTest is DSTest {
             0x0000000000000000000b3dd6d6062aa8b7eb99d033fe29e507e0a0d81b5eaeed,
             1641627092,
             0x0000000000000000000B98AB0000000000000000000000000000000000000000,
-	    false
+            false
         );
     }
 

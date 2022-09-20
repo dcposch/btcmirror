@@ -37,8 +37,6 @@ export default {
     ctx: ExecutionContext
   ): Promise<void> {
     const ethProvider = new ethers.providers.JsonRpcProvider(env.ETH_RPC_URL);
-    const wtf = await ethProvider.send("eth_chainId", []);
-    console.log("Hmm", wtf);
 
     console.log("Running BtcMirror submitter...");
     await submit({
