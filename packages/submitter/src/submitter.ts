@@ -4,15 +4,16 @@ import {
   getBlockCount,
   getBlockHash,
   getBlockHeader,
+  BtcRpcClient,
 } from "./bitcoin-rpc-client";
 
 import btcMirrorAbiJson = require("../../contracts/out/BtcMirror.sol/BtcMirror.json");
 
-// we do NOT import '@eth-optimism/contracts'. that package has terrible
+// We do NOT import '@eth-optimism/contracts'. that package has terrible
 // dependency hygiene. you end up trying to node-gyp compile libusb, wtf.
 // all we need is a plain ABI json and a contract address:
-// import optGPOAbi = require("../../abi/OptimismGasPriceOracle.json");
-// const optGPOAddr = "0x420000000000000000000000000000000000000F";
+import optGPOAbi = require("../abi/OptimismGasPriceOracle.json");
+const optGPOAddr = "0x420000000000000000000000000000000000000F";
 
 interface SubmitterArgs {
   /** Bitcoin Mirror contract address */
@@ -27,7 +28,9 @@ interface SubmitterArgs {
   bitcoinNetwork: "testnet" | "mainnet";
 }
 
-const MAX_BTC_BLOCKS_PER_TX = 200; // Prove that many BTC txs at once.
+const MAX_BLOCKS = 200; // When catching up, advance max this many blocks per tx.
+
+const MAX_GAS_PRICE_OPT = 50; // Don't submit to Optimism during gas price spikes.
 
 export async function submit(args: SubmitterArgs) {
   console.log(`Running BtcMirror submitter ${JSON.stringify(args)}`);
@@ -39,34 +42,20 @@ export async function submit(args: SubmitterArgs) {
     throw new Error("ETH_SUBMITTER_PRIVATE_KEY required");
   }
 
-  // first, get Ethereum BtcMirror latest block height
   console.log(`connecting to Ethereum JSON RPC ${args.rpcUrl}`);
   const ethProvider = new ethers.providers.JsonRpcProvider(args.rpcUrl);
+  const network = await ethProvider.getNetwork();
+  const isL2Opt = network.chainId === 10;
+  const isL2 = isL2Opt;
+  console.log(`Network: ${network.chainId} ${network.name} ${args.rpcUrl}`);
+  if (isL2Opt && (await getOptimismBasefee(ethProvider)) > MAX_GAS_PRICE_OPT) {
+    console.log(`quitting, max base fee > ${MAX_GAS_PRICE_OPT}`);
+    return;
+  }
+
+  // First, get Ethereum BtcMirror latest block height
   console.log(`connecting to BtcMirror contract ${args.contractAddr}`);
-
-  // const network = await ethProvider.getNetwork();
-  // const isL2Opt = network.chainId === 10;
-  // const isL2Zksync = args.rpcUrl.includes("zksync");
-  // const isL2 = isL2Opt || isL2Zksync;
-  // console.log(`Network: ${network.chainId} ${network.name} ${args.rpcUrl}`);
-  // if (isL2Opt) {
-  //   // optimism. bail if the gas cost is too high
-  //   const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
-  //   const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
-  //   const l1BaseFeeGwei = Math.round(l1BaseFeeRes[0] / 1e9);
-  //   console.log(`optimism L1 basefee: ${l1BaseFeeGwei} gwei`);
-
-  //   const maxBaseFee = 50;
-  //   if (l1BaseFeeGwei > maxBaseFee) {
-  //     console.log(`quitting, max base fee > ${maxBaseFee}`);
-  //     return;
-  //   }
-  // }
-
-  // workaround forge bug https://github.com/gakonst/foundry/issues/457
-  const brokenAbi = btcMirrorAbiJson.abi;
-  const abi = brokenAbi.map((func) => Object.assign(func, { constant: null }));
-
+  const abi = btcMirrorAbiJson.abi;
   const contract = new Contract(args.contractAddr, abi, ethProvider);
   const latestHeightRes = await contract.functions["getLatestBlockHeight"]();
   const mirrorLatestHeight = (latestHeightRes[0] as BigNumber).toNumber();
@@ -74,83 +63,121 @@ export async function submit(args: SubmitterArgs) {
 
   // then, get Bitcoin latest block height
   const rpc = createGetblockClient(args.getblockApiKey, args.bitcoinNetwork);
-  const btcLatestHeight = await getBlockCount(rpc);
-  console.log("got BTC latest block height: " + btcLatestHeight);
-  if (btcLatestHeight <= mirrorLatestHeight) {
+  const btcTipHeight = await getBlockCount(rpc);
+  console.log("got BTC latest block height: " + btcTipHeight);
+  if (btcTipHeight <= mirrorLatestHeight) {
     console.log("no new blocks");
     return;
+  } else if (isL2 && btcTipHeight <= mirrorLatestHeight + 6) {
+    console.log("not enough new blocks"); // save gas, submit hourly
+    return;
   }
-  // if (isL2 && btcLatestHeight <= mirrorLatestHeight + 10) {
-  //   // save gas
-  //   console.log("not enough new blocks");
-  //   return;
-  // }
-  const targetHeight = Math.min(
-    btcLatestHeight,
-    mirrorLatestHeight + MAX_BTC_BLOCKS_PER_TX
+  const targetHeight = Math.min(btcTipHeight, mirrorLatestHeight + MAX_BLOCKS);
+
+  // walk backwards to the nearest common block. find which blocks to submit
+  const { fromHeight, hashes } = await getBlockHashesToSubmit(
+    contract,
+    rpc,
+    mirrorLatestHeight,
+    targetHeight
   );
-
-  // then, find the most common ancestor
-  const prefetch = {};
-  for (let height = mirrorLatestHeight + 1; height <= targetHeight; height++) {
-    console.log(`prefetching ${height}...`);
-    prefetch[height] = getBlockHash(rpc, height);
-  }
-
-  console.log("finding last common Bitcoin block headers");
-  let lastCommonHeight: number;
-  const btcHeightToHash = [];
-  for (let height = targetHeight; ; height--) {
-    const mirrorResult =
-      height > mirrorLatestHeight
-        ? ["n/a"]
-        : await contract.functions["getBlockHash"](height);
-    const mirrorHash = (mirrorResult[0] as string).replace("0x", "");
-    const btcHash = await (prefetch[height] || getBlockHash(rpc, height));
-    btcHeightToHash[height] = btcHash;
-    console.log(`height ${height} btc ${btcHash} btcmirror ${mirrorHash}`);
-    if (btcHash === mirrorHash) {
-      lastCommonHeight = height;
-      break;
-    } else if (height === targetHeight - MAX_BTC_BLOCKS_PER_TX) {
-      throw new Error("no common hash found. catastrophic reorg?");
-    }
-  }
-  const lcHash = btcHeightToHash[lastCommonHeight];
-  console.log(`found common hash ${lastCommonHeight}: ${lcHash}`);
-
-  // load block headers from last-common to target
-  const submitFromHeight = lastCommonHeight + 1;
-  const promises = [];
-  for (let height = submitFromHeight; height <= targetHeight; height++) {
-    const hash = btcHeightToHash[height];
-    promises.push(getBlockHeader(rpc, hash));
-  }
-  const headers = await Promise.all(promises);
-  const headersHex = headers.join("");
-  console.log(`got BTC block headers ${submitFromHeight}: ${headersHex}`);
-
-  const nSubmit = targetHeight - submitFromHeight + 1;
-  if (nSubmit === 0 || headersHex.length !== 160 * nSubmit) {
-    console.log(JSON.stringify({ targetHeight, submitFromHeight, headersHex }));
-    throw new Error("INVALID, exiting");
-  }
+  const headers = await loadBlockHeaders(rpc, hashes);
+  console.log(`Loaded BTC blocks ${fromHeight}-${targetHeight}`);
+  if (headers.length !== targetHeight - fromHeight + 1) throw new Error("!#");
 
   // finally, submit a transaction to update the BTCMirror
-  console.log(`submitting BtcMirror ${submitFromHeight} ${headersHex}`);
+  console.log(`Submitting ${headers.length} headers from #${fromHeight}`);
   const ethWallet = new Wallet(args.privateKey, ethProvider);
   const contractWithSigner = contract.connect(ethWallet);
-  const txOptions = { gasLimit: 100000 + 30000 * headers.length };
+  const gasLimit = 100000 + 30000 * headers.length;
   const tx = await contractWithSigner.functions["submit"](
-    submitFromHeight,
-    Buffer.from(headersHex, "hex"),
-    txOptions
+    fromHeight,
+    Buffer.from(headers.join(""), "hex"),
+    { gasLimit }
   );
 
+  await waitForConfirmation(tx.hash, ethProvider);
+}
+
+async function getOptimismBasefee(ethProvider: ethers.providers.Provider) {
+  const gasPriceOracle = new Contract(optGPOAddr, optGPOAbi, ethProvider);
+  const l1BaseFeeRes = await gasPriceOracle.functions["l1BaseFee"]();
+  const l1BaseFeeGwei = Math.round(l1BaseFeeRes[0] / 1e9);
+  console.log(`optimism L1 basefee: ${l1BaseFeeGwei} gwei`);
+  return l1BaseFeeGwei;
+}
+
+/**
+ * Figure out which blocks to submit. This is the most interesting logic in the
+ * submitter; it walks backward to the most recent common ancestor.
+ */
+async function getBlockHashesToSubmit(
+  contract: Contract,
+  rpc: BtcRpcClient,
+  mirrorHeight: number,
+  targetHeight: number
+): Promise<{
+  fromHeight: number;
+  hashes: string[];
+}> {
+  console.log("finding last common Bitcoin block");
+  const hashes = [] as string[];
+  const lch = await getLastCommonHeight(contract, rpc, mirrorHeight, hashes);
+
+  const fromHeight = lch + 1;
+  const promises = [] as Promise<string>[];
+  for (let height = fromHeight; height <= targetHeight; height++) {
+    promises.push(getBlockHash(rpc, height));
+  }
+  hashes.push(...(await Promise.all(promises)));
+
+  return { fromHeight, hashes };
+}
+
+/**
+ * Find the most recent common ancestor. This means a block both in canonical
+ * Bitcoin chain and recognized by the mirror contract.
+ */
+async function getLastCommonHeight(
+  contract: Contract,
+  rpc: BtcRpcClient,
+  mirrorLatestHeight: number,
+  hashes: string[]
+) {
+  for (let height = mirrorLatestHeight; ; height--) {
+    const mirrorResult = await contract.functions["getBlockHash"](height);
+    const mirrorHash = (mirrorResult[0] as string).replace("0x", "");
+    const btcHash = await getBlockHash(rpc, height);
+    console.log(`height ${height} btc ${btcHash} btcmirror ${mirrorHash}`);
+    if (btcHash === mirrorHash) {
+      console.log(`found common hash ${height}: ${btcHash}`);
+      return height;
+    } else if (height === mirrorLatestHeight - MAX_BLOCKS) {
+      throw new Error("no common hash found. catastrophic reorg?");
+    }
+    hashes.unshift(btcHash);
+  }
+}
+
+/**
+ * Load block headers concurrently, given a list of hashes.
+ */
+async function loadBlockHeaders(
+  rpc: BtcRpcClient,
+  hashes: string[]
+): Promise<string[]> {
+  const promises = hashes.map((hash: string) => getBlockHeader(rpc, hash));
+  return await Promise.all(promises);
+}
+
+async function waitForConfirmation(
+  txHash: string,
+  ethProvider: ethers.providers.JsonRpcProvider
+) {
   while (true) {
-    console.log(`Submitted ${tx.hash}, waiting for confirmation`);
+    console.log(`Submitted ${txHash}, waiting for confirmation`);
     await sleep(1000);
-    const receipt = await ethProvider.getTransactionReceipt(tx.hash);
+    const receipt = await ethProvider.getTransactionReceipt(txHash);
     if (receipt == null) {
       console.log("Not yet confirmed");
       continue;
