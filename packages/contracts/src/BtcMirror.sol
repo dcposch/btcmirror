@@ -49,17 +49,22 @@ contract BtcMirror is IBtcMirror {
         uint32 newDifficultyBits
     );
 
+    /**
+     * Emitted when we reorg out a portion of the chain.
+     */
+    event Reorg(uint256 count, bytes32 oldTip, bytes32 newTip);
+
     uint256 private latestBlockHeight;
 
     uint256 private latestBlockTime;
 
     mapping(uint256 => bytes32) private blockHeightToHash;
 
-    mapping(uint256 => uint256) private blockHeightToTotalDifficulty;
+    mapping(uint256 => uint256) private periodToTarget;
 
-    uint256 private expectedTarget;
+    uint256 public longestReorg;
 
-    bool public isTestnet;
+    bool public immutable isTestnet;
 
     constructor(
         uint256 _blockHeight,
@@ -71,7 +76,7 @@ contract BtcMirror is IBtcMirror {
         blockHeightToHash[_blockHeight] = _blockHash;
         latestBlockHeight = _blockHeight;
         latestBlockTime = _blockTime;
-        expectedTarget = _expectedTarget;
+        periodToTarget[_blockHeight / 2016] = _expectedTarget;
         isTestnet = _isTestnet;
     }
 
@@ -98,77 +103,98 @@ contract BtcMirror is IBtcMirror {
 
     /**
      * Submits a new Bitcoin chain segment. Must be heavier (not necessarily
-     * longer) than the chain rooted at getBlockHash(getLatestBlockHeight()).
+     * longer) than the chain rooted at getBlockHash(getLatestBlockHeight()f).
      */
     function submit(uint256 blockHeight, bytes calldata blockHeaders) public {
         uint256 numHeaders = blockHeaders.length / 80;
         require(numHeaders * 80 == blockHeaders.length, "wrong header length");
         require(numHeaders > 0, "must submit at least one block");
 
+        // sanity check: the new chain must end in a past difficulty period
+        // (BtcMirror does not support a 2-week reorg)
+        uint256 oldPeriod = latestBlockHeight / 2016;
         uint256 newHeight = blockHeight + numHeaders - 1;
-        uint256 startP = blockHeight / 2016;
-        uint256 endP = newHeight / 2016;
-        uint256 lastP = latestBlockHeight / 2016;
-        if (startP == lastP && endP == lastP) {
-            // new segment entirely in SAME retarget period.
-            // simply check that we have a new longest chain = heaviest chain
-            require(newHeight > latestBlockHeight, "chain segment too short");
-            for (uint256 i = 0; i < numHeaders; i++) {
-                submitBlock(blockHeight + i, blockHeaders[80 * i:80 * (i + 1)]);
-            }
-        } else {
-            // new segment STARTS from PREV or CURRENT retarget period.
-            require(startP >= lastP - 1, "ancient retarget period");
-            require(endP >= lastP, "chain segment ends in old retarget period");
-            uint256 lastRetargetH = endP * 2016;
+        uint256 newPeriod = newHeight / 2016;
+        require(newPeriod >= oldPeriod, "old difficulty period");
 
-            // this is the trickiest part of BtcMirror.
-            // we have crossed a retargetting period. we want to gas efficiently
-            // allow a SHORTER but HEAVIER chain to replace a LONG, LIGHTER one.
-            // (otherwise, our 50% honest assumption degrades to 80% honest, as
-            // a colluding 21% can simply withold their hashpower for a whole
-            // 2-week retarget period, then mine a far-future spoof block at the
-            // very end, setting the difficulty to the minimum 25% of previous.
-            // then, as they are over 25% of the honest hashpower, they outrun
-            // the honest chain on length and fool BtcMirror.)
-            //
-            // we avoid this by calculating total difficulty since retarget.
-            uint256 oldTotalSince = 0;
-            uint256 MAX = ~uint256(0);
-            if (lastP == endP) {
-                uint256 oldNSince = latestBlockHeight - lastRetargetH + 1;
-                oldTotalSince = oldNSince * (MAX / expectedTarget);
-            }
-
-            for (uint256 i = 0; i < numHeaders; i++) {
-                submitBlock(blockHeight + i, blockHeaders[80 * i:80 * (i + 1)]);
-            }
-
-            uint256 newNSince = newHeight - lastRetargetH + 1;
-            uint256 newTotal = newNSince * (MAX / expectedTarget);
-            require(newTotal > oldTotalSince, "total difficulty too low");
-            uint256 ixB = blockHeaders.length - 8;
-            uint32 newBits = Endian.reverse32(
-                uint32(bytes4(blockHeaders[ixB:ixB + 4]))
-            );
-            emit NewTotalDifficultySinceRetarget(newHeight, newTotal, newBits);
-
-            // erase any block hashes above newHeight, now invalidated.
-            for (uint256 i = newHeight + 1; i <= latestBlockHeight; i++) {
-                blockHeightToHash[i] = 0;
+        uint256 parentPeriod = (blockHeight - 1) / 2016;
+        uint256 oldWork = 0;
+        if (newPeriod > parentPeriod) {
+            assert(newPeriod == parentPeriod + 1);
+            // the submitted chain segment contains a difficulty retarget.
+            if (newPeriod == oldPeriod) {
+                // the old canonical chain is past the retarget
+                // we cannot compare length, we must compare total work
+                oldWork =
+                    ((latestBlockHeight % 2016) + 1) *
+                    getWPerBlock(oldPeriod);
+            } else {
+                // the old canonical chain is before the retarget
+                assert(oldPeriod == parentPeriod);
             }
         }
 
+        // submit each block
+        bytes32 oldTip = getBlockHash(latestBlockHeight);
+        uint256 nReorg = 0;
+        for (uint256 i = 0; i < numHeaders; i++) {
+            uint256 blockNum = blockHeight + i;
+            nReorg += submitBlock(blockNum, blockHeaders[80 * i:80 * (i + 1)]);
+        }
+
+        // check that we have a new longest chain = heaviest chain
+        if (newPeriod > parentPeriod) {
+            // the submitted chain segment crosses into a new difficulty
+            // period. this is only happens once every ~2 weeks and requires
+            // some extra bookkeeping
+            bytes calldata lastHeader = blockHeaders[80 * (numHeaders - 1):];
+            uint32 newDifficultyBits = Endian.reverse32(
+                uint32(bytes4(lastHeader[72:76]))
+            );
+
+            uint256 newWork = ((newHeight % 2016) + 1) *
+                getWPerBlock(newPeriod);
+            require(newWork > oldWork, "insufficient difficulty");
+
+            emit NewTotalDifficultySinceRetarget(
+                newHeight,
+                newWork,
+                newDifficultyBits
+            );
+        } else {
+            // here we know what newPeriod == oldPeriod == parentPeriod
+            // the per-block difficulty hasn't changed. keep longest chain.
+            assert(newPeriod == oldPeriod);
+            assert(newPeriod == parentPeriod);
+            require(newHeight > latestBlockHeight, "insufficient chain length");
+        }
+
+        // erase any block hashes above newHeight, now invalidated.
+        for (uint256 i = newHeight + 1; i <= latestBlockHeight; i++) {
+            blockHeightToHash[i] = 0;
+        }
+
+        // track timestamps
         latestBlockHeight = newHeight;
         uint256 ixT = blockHeaders.length - 12;
         uint32 time = uint32(bytes4(blockHeaders[ixT:ixT + 4]));
         latestBlockTime = Endian.reverse32(time);
 
-        emit NewTip(newHeight, latestBlockTime, getBlockHash(newHeight));
+        bytes32 newTip = getBlockHash(newHeight);
+        emit NewTip(newHeight, latestBlockTime, newTip);
+        if (nReorg > 0) {
+            emit Reorg(nReorg, oldTip, newTip);
+        }
+    }
+
+    function getWPerBlock(uint256 period) private view returns (uint256) {
+        uint256 target = periodToTarget[period];
+        return (2**256 - 1) / target;
     }
 
     function submitBlock(uint256 blockHeight, bytes calldata blockHeader)
         private
+        returns (uint256 numReorged)
     {
         // compute the block hash
         assert(blockHeader.length == 80);
@@ -178,7 +204,13 @@ contract BtcMirror is IBtcMirror {
 
         // optimistically save the block hash
         // we'll revert if the header turns out to be invalid
-        blockHeightToHash[blockHeight] = bytes32(blockHashNum);
+        bytes32 oldHash = blockHeightToHash[blockHeight];
+        bytes32 newHash = bytes32(blockHashNum);
+        if (oldHash != bytes32(0) && oldHash != newHash) {
+            numReorged = 1;
+        }
+        // this is the most expensive line. 20k gas to use a new storage slot
+        blockHeightToHash[blockHeight] = newHash;
 
         // verify previous hash
         bytes32 prevHash = bytes32(
@@ -196,18 +228,20 @@ contract BtcMirror is IBtcMirror {
         // Bitcoin testnet has some clown hacks regarding difficulty:
         // https://blog.lopp.net/the-block-storms-of-bitcoins-testnet/
         if (isTestnet) {
-            return;
+            return numReorged;
         }
 
         // support once-every-2016-blocks retargeting
+        uint256 period = blockHeight / 2016;
         if (blockHeight % 2016 == 0) {
             // Bitcoin enforces a minimum difficulty of 25% of the previous
             // difficulty. Doing the full calculation here does not necessarily
             // add any security. We keep the heaviest chain, not the longest.
-            require(target >> 2 < expectedTarget, "<25% difficulty retarget");
-            expectedTarget = target;
+            uint256 lastTarget = periodToTarget[period - 1];
+            require(target >> 2 < lastTarget, "<25% difficulty retarget");
+            periodToTarget[period] = target;
         } else {
-            require(target == expectedTarget, "wrong difficulty bits");
+            require(target == periodToTarget[period], "wrong difficulty bits");
         }
     }
 

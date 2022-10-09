@@ -176,7 +176,9 @@ contract BtcMirrorTest is DSTest {
             1641628146,
             0x00000000000000000000794d6f4f6ee1c09e69a81469d7456e67be3d724223fb
         );
+        vm.recordLogs();
         mirror.submit(717695, bytes.concat(headerGood, b717696, b717697));
         assertEq(mirror.getLatestBlockHeight(), 717697);
+        assertEq(vm.getRecordedLogs().length, 2);
     }
 }
