@@ -91,9 +91,8 @@ function Docs() {
     <div className="docs">
       <h2>## BtcMirror is a Ethereum contract that tracks Bitcoin</h2>
       <p>
-        This lets you prove that a BTC transaction executed, on Ethereum. In
-        other words, it lets other Ethereum contracts run Simple Payment
-        Verification (SPV) on BTC transactions.
+        This lets you prove that a Bitcoin transaction executed, on Ethereum. It
+        does this by running an on-chain light client.
       </p>
       <p>
         Anyone can submit block headers to BtcMirror. The contract verifies

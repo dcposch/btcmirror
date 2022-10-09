@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-// Bitwise math helpers, for dealing with Bitcoin block headers.
+// Bitwise math helpers for dealing with Bitcoin block headers.
 // Bitcoin block fields are little-endian. Must flip to big-endian for EVM.
 library Endian {
     function reverse256(uint256 input) internal pure returns (uint256 v) {

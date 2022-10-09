@@ -25,7 +25,7 @@ import "./BtcProofUtils.sol";
 //                                      +++++
 //                                        +
 //
-// BtcVerifier implements a Merkle proof that a Bitcoin payment succeeded. It
+// BtcVerifier implements a merkle proof that a Bitcoin payment succeeded. It
 // uses BtcMirror as a source of truth for which Bitcoin block hashes are in the
 // canonical chain.
 contract BtcTxVerifier is IBtcTxVerifier {

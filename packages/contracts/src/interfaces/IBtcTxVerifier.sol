@@ -20,6 +20,6 @@ interface IBtcTxVerifier {
         uint256 amountSats
     ) external view returns (bool);
 
-    // Returns the underlying IBtcMirror instance associated with this verifier.
+    /** @notice Returns the underlying mirror associated with this verifier. */
     function mirror() external view returns (IBtcMirror);
 }

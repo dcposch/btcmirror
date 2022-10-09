@@ -74,17 +74,19 @@ struct BitcoinTxOut {
 //                                        +
 //
 // BtcProofUtils provides functions to prove things about Bitcoin transactions.
-// Verifies Merkle inclusion proofs, tx IDs, and payment details.
+// Verifies merkle inclusion proofs, transaction IDs, and payment details.
 library BtcProofUtils {
     /**
      * @dev Validates that a given payment appears under a given block hash.
      *
-     * This verifies a whole chain:
+     * This verifies all of the following:
      * 1. Raw transaction really does pay X satoshis to Y script hash.
-     * 2. Raw tx hashes to a transaction ID.
+     * 2. Raw transaction hashes to the given transaction ID.
      * 3. Transaction ID appears under transaction root (Merkle proof).
      * 4. Transaction root is part of the block header.
      * 5. Block header hashes to a given block hash.
+     *
+     * The caller must separately verify that the block hash is in the chain.
      *
      * Always returns true or reverts with a descriptive reason.
      */
@@ -122,14 +124,11 @@ library BtcProofUtils {
 
         // We've verified that blockHash contains a P2SH transaction
         // that sends at least satoshisExpected to the given hash.
-        //
-        // This function does NOT verify that blockHash is in the canonical
-        // chain. Do that separately using BtcMirror.
         return true;
     }
 
     /**
-     * @dev Get a block hash given a block header.
+     * @dev Compute a block hash given a block header.
      */
     function getBlockHash(bytes calldata blockHeader)
         public
@@ -142,7 +141,7 @@ library BtcProofUtils {
     }
 
     /**
-     * @dev Get the transactions root given a block header.
+     * @dev Get the transactions merkle root given a block header.
      */
     function getBlockTxMerkleRoot(bytes calldata blockHeader)
         public
@@ -155,8 +154,6 @@ library BtcProofUtils {
 
     /**
      * @dev Recomputes the transactions root given a merkle proof.
-     *
-     * TODO: pre-reverse txId and proof to save gas
      */
     function getTxMerkleRoot(
         bytes32 txId,
@@ -202,7 +199,7 @@ library BtcProofUtils {
 
     /**
      * @dev Parses a HASH-SERIALIZED Bitcoin transaction.
-     *      This means no flags and no witnesses for segwit txs.
+     *      This means no flags and no segwit witnesses.
      */
     function parseBitcoinTx(bytes calldata rawTx)
         public
@@ -275,6 +272,7 @@ library BtcProofUtils {
         return ret;
     }
 
+    /** Reads a Bitcoin-serialized varint = a u256 serialized in 1-9 bytes. */
     function readVarInt(bytes calldata buf, uint256 offset)
         public
         pure
@@ -296,20 +294,6 @@ library BtcProofUtils {
             newOffset = offset + 9;
         }
     }
-
-    /**
-     * @dev Verifies a standard P2PKH payment = to an address starting with 1.
-     */
-    // function getPaymentP2PKH(
-    //     bytes20 recipientPubKeyHash,
-    //     BitcoinTxOut calldata txOut
-    // ) internal pure returns (uint256) {
-    //     if (txOut.script.length != 23) {
-    //         return 0;
-    //     }
-    //     return 0;
-    //     // TODO: if (bytes2(txOut.script[0:2]) != hex"a914") return txOut.valueSats;
-    // }
 
     /**
      * @dev Verifies that `script` is a standard P2SH (pay to script hash) tx.
