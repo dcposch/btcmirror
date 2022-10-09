@@ -40,15 +40,11 @@ forge test -vv
 
 ### Run the submitter
 
-```
-cd packages/submitter
-npm ci
-npm run submit-ropsten
-```
+Point Cloudflare Functions to your fork of the repo using `wrangler`.
 
-You'll an address with a bit of xdai to pay transaction costs. Set `ETH_SUBMITTER_PRIVATE_KEY` accordingly.
+The submitter will run automatically and reliably, on a schedule. See `wrangler.toml`.
 
-You'll also need a free API key for [getblock.io](https://getblock.io). Set `GETBLOCK_API_KEY`.
+You'll need to configure a few secrets, including `ETH_SUBMITTER_PRIVATE_KEY` and `ETH_RPC_URL`. You'll also need a free API key for [getblock.io](https://getblock.io). Set `GETBLOCK_API_KEY`.
 
 ### Run the website
 

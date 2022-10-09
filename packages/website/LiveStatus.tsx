@@ -15,15 +15,15 @@ interface Chain {
 
 const chains: Chain[] = [
   {
-    id: "rop",
-    name: "ROPSTEN",
-    rpcUrl: "https://ropsten.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
-    contractAddr: "0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229",
+    id: "test",
+    name: "GOERLI",
+    rpcUrl: "https://goerli.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
+    contractAddr: "TODO",
     explorerUrl:
-      "https://ropsten.etherscan.io/address/0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229#events",
+      "https://goerli.etherscan.io/address/0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229#events",
     explorerText: "View contract on Etherscan",
     description:
-      "Ropsten is an Ethereum proof-of-stake testnet. This Bitcoin Mirror deployment tracks testnet Bitcoin.",
+      "Goerli is an Ethereum proof-of-stake testnet. This Bitcoin Mirror deployment tracks testnet Bitcoin.",
   },
   {
     id: "opt",
