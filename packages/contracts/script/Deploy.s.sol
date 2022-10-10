@@ -7,13 +7,11 @@ import "../src/BtcMirror.sol";
 import "../src/BtcTxVerifier.sol";
 
 contract DeployBtcMirror is Script {
-    function setUp() public {}
-
     /**
      * @notice Deploys BtcMirror and BtcTxVerifier, tracking either mainnet or
      *         testnet Bitcoin.
      */
-    function run(bool mainnet) public {
+    function run(bool mainnet) external {
         vm.broadcast();
 
         // Deploy BtcMirror

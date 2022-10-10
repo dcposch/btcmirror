@@ -2,8 +2,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import BtcMirrorContract from "./BtcMirrorContract";
 
+type ChainID = "test" | "opt";
+
 interface Chain {
-  id: string;
+  id: ChainID;
   name: string;
   rpcUrl: string;
   contractAddr: string;
@@ -18,7 +20,7 @@ const chains: Chain[] = [
     id: "test",
     name: "GOERLI",
     rpcUrl: "https://goerli.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
-    contractAddr: "TODO",
+    contractAddr: "0x26ae1579bfb0a9ed3c1e7fdb2f323c9b004152e2",
     explorerUrl:
       "https://goerli.etherscan.io/address/0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229#events",
     explorerText: "View contract on Etherscan",
@@ -40,7 +42,7 @@ const chains: Chain[] = [
 ];
 
 export default function LiveStatus() {
-  const [chainId, setChainId] = useState("rop");
+  const [chainId, setChainId] = useState<ChainID>("test");
   const chain = chains.find((c) => c.id === chainId)!;
 
   if (chain.contract == null) {

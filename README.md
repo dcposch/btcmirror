@@ -56,15 +56,11 @@ npm start
 
 ### Deploy the contract
 
+Ensure `ETHERSCAN_API_KEY` is set. Then, run the following to deploy and verify.
+
 ```
 cd packages/contracts
-forge script -f $RPC_URL --private-key $PK DeployBtcMirror -- true
+forge script -f $RPC_URL --private-key $PK -s 'run(bool)' --broadcast --verify  DeployBtcMirror true
 ```
 
-Run with `false` for a deployment tracking the Bitcoin testnet rather than mainnet. Either way, `$RPC_URL` determines which Ethereum network you're deploying to.
-
-Then, ensure `ETHERSCAN_API_KEY` is set, and run the following to verify.
-
-```
-forge script --verify DeployBtcMirror -- <true or false, as above>
-```
+Run with `false` for a deployment tracking the Bitcoin testnet rather than mainnet.
