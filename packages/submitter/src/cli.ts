@@ -9,6 +9,7 @@ async function main() {
     privateKey: env.ETH_SUBMITTER_PRIVATE_KEY,
     getblockApiKey: env.GETBLOCK_API_KEY,
     bitcoinNetwork: (env.BITCOIN_NETWORK || "mainnet") as "mainnet" | "testnet",
+    maxBlocks: 200,
   });
 }
 

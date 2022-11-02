@@ -28,6 +28,7 @@ export interface Env {
   ETH_SUBMITTER_PRIVATE_KEY: string;
   GETBLOCK_API_KEY: string;
   BITCOIN_NETWORK: "testnet" | "mainnet";
+  MAX_BLOCKS_PER_BATCH: string;
 }
 
 export default {
@@ -43,6 +44,7 @@ export default {
       privateKey: env.ETH_SUBMITTER_PRIVATE_KEY,
       getblockApiKey: env.GETBLOCK_API_KEY,
       bitcoinNetwork: env.BITCOIN_NETWORK,
+      maxBlocks: Number(env.MAX_BLOCKS_PER_BATCH || 20),
     });
     console.log("Done running BtcMirror submitter...");
   },

@@ -17,7 +17,7 @@ export interface BlockJson {
   tx: string[];
 }
 
-type BtcRpcClient = JsonRpcClient;
+export type BtcRpcClient = JsonRpcClient;
 
 /**
  * Creates a Bitcoin client pointing to getblock.io

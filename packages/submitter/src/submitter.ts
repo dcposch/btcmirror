@@ -26,9 +26,9 @@ interface SubmitterArgs {
   getblockApiKey: string;
   /** Bitcoin network, testnet or mainnet */
   bitcoinNetwork: "testnet" | "mainnet";
+  /** When catching up, prove at most this many blocks per batch */
+  maxBlocks: number;
 }
-
-const MAX_BLOCKS = 200; // When catching up, advance max this many blocks per tx.
 
 const MAX_GAS_PRICE_OPT = 50; // Don't submit to Optimism during gas price spikes.
 
@@ -44,6 +44,8 @@ export async function submit(args: SubmitterArgs) {
     throw new Error("GETBLOCK_API_KEY required");
   } else if (args.bitcoinNetwork == null) {
     throw new Error("BITCOIN_NETWORK required");
+  } else if (!(args.maxBlocks > 0)) {
+    throw new Error("MAX_BLOCKS_PER_BATCH required");
   }
 
   console.log(`connecting to Ethereum JSON RPC ${args.rpcUrl}`);
@@ -79,7 +81,10 @@ export async function submit(args: SubmitterArgs) {
     console.log("not enough new blocks"); // save gas, submit hourly
     return;
   }
-  const targetHeight = Math.min(btcTipHeight, mirrorLatestHeight + MAX_BLOCKS);
+  const targetHeight = Math.min(
+    btcTipHeight,
+    mirrorLatestHeight + args.maxBlocks
+  );
 
   // walk backwards to the nearest common block. find which blocks to submit
   const { fromHeight, hashes } = await getBlockHashesToSubmit(
@@ -151,7 +156,12 @@ async function getLastCommonHeight(
   mirrorLatestHeight: number,
   hashes: string[]
 ) {
-  for (let height = mirrorLatestHeight; ; height--) {
+  const maxReorg = 20;
+  for (
+    let height = mirrorLatestHeight;
+    mirrorLatestHeight - maxReorg;
+    height--
+  ) {
     const mirrorResult = await contract.functions["getBlockHash"](height);
     const mirrorHash = (mirrorResult[0] as string).replace("0x", "");
     const btcHash = await getBlockHash(rpc, height);
@@ -159,8 +169,10 @@ async function getLastCommonHeight(
     if (btcHash === mirrorHash) {
       console.log(`found common hash ${height}: ${btcHash}`);
       return height;
-    } else if (height === mirrorLatestHeight - MAX_BLOCKS) {
-      throw new Error("no common hash found. catastrophic reorg?");
+    } else if (height === mirrorLatestHeight - maxReorg) {
+      throw new Error(
+        `no common hash found within ${maxReorg} blocks. catastrophic reorg?`
+      );
     }
     hashes.unshift(btcHash);
   }

@@ -18,14 +18,14 @@ interface Chain {
 const chains: Chain[] = [
   {
     id: "test",
-    name: "GOERLI",
-    rpcUrl: "https://goerli.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
-    contractAddr: "0x26ae1579bfb0a9ed3c1e7fdb2f323c9b004152e2",
+    name: "SEPOLIA",
+    rpcUrl: "https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
+    contractAddr: "0x8f562b0add56a9facd9e42a51d874ba17f616b27",
     explorerUrl:
-      "https://goerli.etherscan.io/address/0xffce2bfe3933c8ed1807c6c44241a4b3e90ca229#events",
+      "https://sepolia.etherscan.io/address/0x8f562b0add56a9facd9e42a51d874ba17f616b27",
     explorerText: "View contract on Etherscan",
     description:
-      "Goerli is an Ethereum proof-of-stake testnet. This Bitcoin Mirror deployment tracks testnet Bitcoin.",
+      "Sepolia is an Ethereum proof-of-stake testnet. This deployment tracks testnet Bitcoin.",
   },
   {
     id: "opt",

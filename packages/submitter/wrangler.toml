@@ -1,12 +1,12 @@
 name = "btcmirror-submitter"
 
 main = "src/index.ts"
-compatibility_date = "2022-09-19"
+compatibility_date = "2022-11-01"
 node_compat = true
 
 [vars]
-BTCMIRROR_CONTRACT_ADDR="0x26ae1579bfb0a9ed3c1e7fdb2f323c9b004152e2"
-ETH_RPC_URL="https://goerli.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
+BTCMIRROR_CONTRACT_ADDR="0x8f562b0add56a9facd9e42a51d874ba17f616b27"
+ETH_RPC_URL="https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
 BITCOIN_NETWORK="testnet"
 
 # Secrets: 
