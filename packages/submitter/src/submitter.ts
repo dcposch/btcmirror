@@ -108,6 +108,7 @@ export async function submit(args: SubmitterArgs) {
     { gasLimit }
   );
 
+  console.log("Waiting for confirmations");
   await waitForConfirmation(tx.hash, ethProvider);
 }
 

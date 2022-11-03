@@ -22,10 +22,10 @@ const chains: Chain[] = [
     rpcUrl: "https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
     contractAddr: "0x8f562b0add56a9facd9e42a51d874ba17f616b27",
     explorerUrl:
-      "https://sepolia.etherscan.io/address/0x8f562b0add56a9facd9e42a51d874ba17f616b27",
+      "https://sepolia.etherscan.io/address/0xc8ba32cab1757528daf49033e3673fae77dcf05d",
     explorerText: "View contract on Etherscan",
     description:
-      "Sepolia is an Ethereum proof-of-stake testnet. This deployment tracks testnet Bitcoin.",
+      "Sepolia is an Ethereum proof-of-stake testnet. This deployment tracks the Bitcoin testnet.",
   },
   {
     id: "opt",

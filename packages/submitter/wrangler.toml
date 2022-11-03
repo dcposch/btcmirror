@@ -4,15 +4,20 @@ main = "src/index.ts"
 compatibility_date = "2022-11-01"
 node_compat = true
 
-[vars]
-BTCMIRROR_CONTRACT_ADDR="0x8f562b0add56a9facd9e42a51d874ba17f616b27"
-ETH_RPC_URL="https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
-BITCOIN_NETWORK="testnet"
-
 # Secrets: 
 # - ETH_SUBMITTER_PRIVATE_KEY
 # - GETBLOCK_API_KEY
 # Run `echo <val> | wrangler secret put <key>`
+
+[env.mainnet.vars]
+BTCMIRROR_CONTRACT_ADDR="0x2d5a67ed56afe3f56ff035e3f269bd3b230b108a"
+ETH_RPC_URL="https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
+BITCOIN_NETWORK="mainnet"
+
+[env.testnet.vars]
+BTCMIRROR_CONTRACT_ADDR="0xc8ba32cab1757528daf49033e3673fae77dcf05d"
+ETH_RPC_URL="https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0"
+BITCOIN_NETWORK="testnet"
 
 [triggers]
 crons = [ "* * * * *" ]
