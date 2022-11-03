@@ -196,7 +196,7 @@ async function waitForConfirmation(
 ) {
   while (true) {
     console.log(`Submitted ${txHash}, waiting for confirmation`);
-    await sleep(1000);
+    await sleep(4000);
     const receipt = await ethProvider.getTransactionReceipt(txHash);
     if (receipt == null) {
       console.log("Not yet confirmed");

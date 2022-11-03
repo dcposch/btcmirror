@@ -44,7 +44,7 @@ export default {
       privateKey: env.ETH_SUBMITTER_PRIVATE_KEY,
       getblockApiKey: env.GETBLOCK_API_KEY,
       bitcoinNetwork: env.BITCOIN_NETWORK,
-      maxBlocks: Number(env.MAX_BLOCKS_PER_BATCH || 20),
+      maxBlocks: Number(env.MAX_BLOCKS_PER_BATCH || 10),
     });
     console.log("Done running BtcMirror submitter...");
   },
