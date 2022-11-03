@@ -59,7 +59,8 @@ contract BtcMirror is IBtcMirror {
 
     mapping(uint256 => bytes32) private blockHeightToHash;
 
-    mapping(uint256 => uint256) private periodToTarget;
+    /** @notice Difficulty targets in each retargeting period. */
+    mapping(uint256 => uint256) public periodToTarget;
 
     /** @notice The longest reorg that this BtcMirror instance has observed. */
     uint256 public longestReorg;
@@ -239,13 +240,6 @@ contract BtcMirror is IBtcMirror {
         uint256 target = getTarget(bits);
         require(blockHashNum < target, "block hash above target");
 
-        // ignore difficulty update rules on testnet.
-        // Bitcoin testnet has some clown hacks regarding difficulty, see
-        // https://blog.lopp.net/the-block-storms-of-bitcoins-testnet/
-        if (isTestnet) {
-            return numReorged;
-        }
-
         // support once-every-2016-blocks retargeting
         uint256 period = blockHeight / 2016;
         if (blockHeight % 2016 == 0) {
@@ -253,9 +247,14 @@ contract BtcMirror is IBtcMirror {
             // difficulty. Doing the full calculation here does not necessarily
             // add any security. We keep the heaviest chain, not the longest.
             uint256 lastTarget = periodToTarget[period - 1];
-            require(target >> 2 < lastTarget, "<25% difficulty retarget");
+            // ignore difficulty update rules on testnet.
+            // Bitcoin testnet has some clown hacks regarding difficulty, see
+            // https://blog.lopp.net/the-block-storms-of-bitcoins-testnet/
+            if (!isTestnet) {
+                require(target >> 2 < lastTarget, "<25% difficulty retarget");
+            }
             periodToTarget[period] = target;
-        } else {
+        } else if (!isTestnet) {
             // verify difficulty
             require(target == periodToTarget[period], "wrong difficulty bits");
         }
