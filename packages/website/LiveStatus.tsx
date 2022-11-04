@@ -18,9 +18,9 @@ interface Chain {
 const chains: Chain[] = [
   {
     id: "test",
-    name: "SEPOLIA",
+    name: "TESTNET",
     rpcUrl: "https://sepolia.infura.io/v3/c2098b0ca85643b1ad367c0f479c98f0",
-    contractAddr: "0x8f562b0add56a9facd9e42a51d874ba17f616b27",
+    contractAddr: "0xc8ba32cab1757528daf49033e3673fae77dcf05d",
     explorerUrl:
       "https://sepolia.etherscan.io/address/0xc8ba32cab1757528daf49033e3673fae77dcf05d",
     explorerText: "View contract on Etherscan",
