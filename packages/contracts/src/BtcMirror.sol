@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
 import "./Endian.sol";
@@ -57,7 +56,16 @@ contract BtcMirror is IBtcMirror {
 
     uint256 private latestBlockTime;
 
-    mapping(uint256 => bytes32) private blockHeightToHash;
+    /**
+     * @notice Store the last 2n blocks. Reorgs deeper than n are unsupported.
+     * (For comparison, the deepest Bitcoin reorg so far was 53 blocks in Aug
+     * 2010, and anything over 5 blocks would be considered catastrophic today.)
+     * Storing only the last n blocks saves ~17,000 gas per block.
+     */
+    uint256 constant MAX_ALLOWED_REORG = 500;
+    uint256 constant NUM_BLOCKS = MAX_ALLOWED_REORG * 2;
+    bytes32[NUM_BLOCKS] public blockHashes;
+    uint256 public latestBlockIx;
 
     /** @notice Difficulty targets in each retargeting period. */
     mapping(uint256 => uint256) public periodToTarget;
@@ -80,7 +88,7 @@ contract BtcMirror is IBtcMirror {
         uint256 _expectedTarget,
         bool _isTestnet
     ) {
-        blockHeightToHash[_blockHeight] = _blockHash;
+        blockHashes[0] = _blockHash;
         latestBlockHeight = _blockHeight;
         latestBlockTime = _blockTime;
         periodToTarget[_blockHeight / 2016] = _expectedTarget;
@@ -89,9 +97,21 @@ contract BtcMirror is IBtcMirror {
 
     /**
      * @notice Returns the Bitcoin block hash at a specific height.
+     * The block number must not be higher than getLatestBlockHeight().
+     * Returns 0 if the block is too old, and we no longer store its hash.
      */
-    function getBlockHash(uint256 number) public view returns (bytes32) {
-        return blockHeightToHash[number];
+    function getBlockHash(uint256 blockNum) public view returns (bytes32) {
+        require(blockNum <= latestBlockHeight, "Block not yet submitted");
+        if (blockNum < latestBlockHeight - MAX_ALLOWED_REORG) {
+            return 0;
+        }
+        return blockHashes[getBlockIx(blockNum)];
+    }
+
+    function getBlockIx(uint256 blockNum) private view returns (uint256) {
+        return
+            (NUM_BLOCKS + latestBlockIx + blockNum - latestBlockHeight) %
+            NUM_BLOCKS;
     }
 
     /**
@@ -116,9 +136,9 @@ contract BtcMirror is IBtcMirror {
         uint256 numHeaders = blockHeaders.length / 80;
         require(numHeaders * 80 == blockHeaders.length, "wrong header length");
         require(numHeaders > 0, "must submit at least one block");
+        require(blockHeight > latestBlockHeight - MAX_ALLOWED_REORG, "reorg");
 
         // sanity check: the new chain must not end in a past difficulty period
-        // (BtcMirror does not support a 2-week reorg)
         uint256 oldPeriod = latestBlockHeight / 2016;
         uint256 newHeight = blockHeight + numHeaders - 1;
         uint256 newPeriod = newHeight / 2016;
@@ -160,12 +180,6 @@ contract BtcMirror is IBtcMirror {
             uint256 newWork = getWorkInPeriod(newPeriod, newHeight);
             require(newWork > oldWork, "insufficient total difficulty");
 
-            // erase any block hashes above newHeight, now invalidated.
-            // (in case we just accepted a shorter, heavier chain.)
-            for (uint256 i = newHeight + 1; i <= latestBlockHeight; i++) {
-                blockHeightToHash[i] = 0;
-            }
-
             emit NewTotalDifficultySinceRetarget(
                 newHeight,
                 newWork,
@@ -180,6 +194,7 @@ contract BtcMirror is IBtcMirror {
         }
 
         // record the new tip height and timestamp
+        latestBlockIx = getBlockIx(newHeight);
         latestBlockHeight = newHeight;
         uint256 ixT = blockHeaders.length - 12;
         uint32 time = uint32(bytes4(blockHeaders[ixT:ixT + 4]));
@@ -219,21 +234,25 @@ contract BtcMirror is IBtcMirror {
 
         // optimistically save the block hash
         // we'll revert if the header turns out to be invalid
-        bytes32 oldHash = blockHeightToHash[blockHeight];
         bytes32 newHash = bytes32(blockHashNum);
-        if (oldHash != bytes32(0) && oldHash != newHash) {
+        uint256 blockIx = getBlockIx(blockHeight);
+        if (
+            blockHeight <= latestBlockHeight && blockHashes[blockIx] != newHash
+        ) {
             // if we're overwriting a non-zero block hash, that block is reorged
             numReorged = 1;
         }
-        // this is the most expensive line. 20,000 gas to use a new storage slot
-        blockHeightToHash[blockHeight] = newHash;
+        // this is the most expensive line
+        // 20k gas to use a new storage slot initially, 3k once array is full
+        blockHashes[blockIx] = newHash;
 
         // verify previous hash
         bytes32 prevHash = bytes32(
             Endian.reverse256(uint256(bytes32(blockHeader[4:36])))
         );
-        require(prevHash == blockHeightToHash[blockHeight - 1], "bad parent");
-        require(prevHash != bytes32(0), "parent block not yet submitted");
+        bytes32 parent = blockHashes[(blockIx + NUM_BLOCKS - 1) % NUM_BLOCKS];
+        require(parent != bytes32(0), "parent block not yet submitted");
+        require(prevHash == parent, "bad parent");
 
         // verify proof-of-work
         bytes32 bits = bytes32(blockHeader[72:76]);
